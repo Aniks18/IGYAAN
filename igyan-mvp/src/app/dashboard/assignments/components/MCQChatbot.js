@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { aiChat } from "@/app/utils/ai-fallback";
 import { Send, Loader2, BookOpen, FileText } from 'lucide-react';
 import OpenAI from 'openai/index.js';
 
@@ -55,7 +56,7 @@ IMPORTANT:
 - Provide detailed explanations
 - Match difficulty level requested`;
 
-      const response = await openai.chat.completions.create({
+      const response = await aiChat({
         model: 'gpt-4o-mini',
         messages: [
           {

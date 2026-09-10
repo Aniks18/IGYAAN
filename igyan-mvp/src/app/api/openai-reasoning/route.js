@@ -1,4 +1,5 @@
 import { NextResponse } from "next/server";
+import { aiFetch } from "@/app/utils/ai-fallback";
 
 export async function POST(request) {
 	try {
@@ -21,7 +22,7 @@ export async function POST(request) {
 			});
 		}
 
-		const response = await fetch("https://api.openai.com/v1/chat/completions", {
+		const response = await aiFetch("https://api.openai.com/v1/chat/completions", {
 			method: "POST",
 			headers: {
 				"Content-Type": "application/json",

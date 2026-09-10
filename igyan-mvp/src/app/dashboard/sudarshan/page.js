@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { aiFetch } from "@/app/utils/ai-fallback";
 import { useRouter } from "next/navigation";
 import Image from "next/image";
 import { useAuth } from "../../utils/auth_context";
@@ -237,7 +238,7 @@ export default function AICopilotPage() {
 	// Call OpenAI API
 	const callOpenAI = async (conversationMessages) => {
 		try {
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
+			const response = await aiFetch("https://api.openai.com/v1/chat/completions", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",

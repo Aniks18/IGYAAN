@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { aiFetch } from "@/app/utils/ai-fallback";
 
 const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
@@ -15,7 +16,7 @@ export async function POST(request) {
 
     // Handle direct prompt for question paper generation
     if (prompt) {
-      const response = await fetch('https://api.openai.com/v1/chat/completions', {
+      const response = await aiFetch('https://api.openai.com/v1/chat/completions', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
@@ -125,7 +126,7 @@ Rules:
 - Encourage critical thinking and application`;
     }
 
-    const response = await fetch('https://api.openai.com/v1/chat/completions', {
+    const response = await aiFetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

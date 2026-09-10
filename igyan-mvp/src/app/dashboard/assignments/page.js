@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { aiChat } from "@/app/utils/ai-fallback";
 import { FileText, Download, BookOpen, Sparkles, CheckCircle, Loader2, Copy, Check } from 'lucide-react';
 import { cbseData, getSubjects, getTopics } from './data/cbseData';
 import { generateMCQPDF } from './utils/mcqPDFGenerator';
@@ -119,7 +120,7 @@ IMPORTANT:
 - Match the specified difficulty level
 - Follow the exact format for each question type`;
 
-      const response = await openai.chat.completions.create({
+      const response = await aiChat({
         model: 'gpt-4o-mini',
         messages: [
           {

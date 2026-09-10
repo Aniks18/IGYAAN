@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { aiFetch } from "@/app/utils/ai-fallback";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../utils/auth_context";
 import QuizQuestion from "./components/QuizQuestion";
@@ -78,7 +79,7 @@ Return the response in this EXACT JSON format:
 
 Provide ONLY valid JSON, no additional commentary.`;
 
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
+			const response = await aiFetch("https://api.openai.com/v1/chat/completions", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",

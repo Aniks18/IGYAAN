@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { aiFetch } from "@/app/utils/ai-fallback";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../utils/auth_context";
 import { supabase } from "../../utils/supabase";
@@ -267,7 +268,7 @@ export default function IgyanAIPage() {
 
 	const generateChatTitle = async (firstMessage) => {
 		try {
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
+			const response = await aiFetch("https://api.openai.com/v1/chat/completions", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -372,7 +373,7 @@ export default function IgyanAIPage() {
 			// Generate 4-6 questions based on selected notes
 			const numQuestions = Math.floor(Math.random() * 3) + 4; // 4-6 questions
 			
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
+			const response = await aiFetch("https://api.openai.com/v1/chat/completions", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -464,7 +465,7 @@ Example format:
 		// Evaluate the answer
 		setIsProcessing(true);
 		try {
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
+			const response = await aiFetch("https://api.openai.com/v1/chat/completions", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -545,7 +546,7 @@ Example format:
 	const generateQuizReport = async (answers) => {
 		setIsProcessing(true);
 		try {
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
+			const response = await aiFetch("https://api.openai.com/v1/chat/completions", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
@@ -669,7 +670,7 @@ Keep it positive, specific, and under 200 words. Use emojis to make it engaging.
 		}
 
 		systemContext += `\n\nStudent profile insights: ${profileContext}`;			// Call OpenAI API for AI response
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
+			const response = await aiFetch("https://api.openai.com/v1/chat/completions", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",

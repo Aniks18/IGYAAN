@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { aiChat } from "@/app/utils/ai-fallback";
 import { Send, Loader2, FileQuestion, CheckCircle } from 'lucide-react';
 import OpenAI from 'openai/index.js';
 
@@ -141,7 +142,7 @@ Q1. [Detailed answer with marking points]
         userPrompt = currentQuestion || 'Generate the question paper as per the instructions';
       }
 
-      const response = await openai.chat.completions.create({
+      const response = await aiChat({
         model: 'gpt-4o-mini',
         messages: [
           {

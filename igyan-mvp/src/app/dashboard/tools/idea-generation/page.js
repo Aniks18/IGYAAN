@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { aiFetch } from "@/app/utils/ai-fallback";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../utils/auth_context";
 
@@ -86,7 +87,7 @@ For EACH idea, provide the response in this EXACT JSON format:
 
 Return an array of 3 such JSON objects. Make ideas unique, feasible, and exciting. Ensure valid JSON format.`;
 
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
+			const response = await aiFetch("https://api.openai.com/v1/chat/completions", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",

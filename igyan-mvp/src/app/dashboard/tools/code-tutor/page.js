@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useState, useRef } from "react";
+import { aiFetch } from "@/app/utils/ai-fallback";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../utils/auth_context";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
@@ -92,7 +93,7 @@ IMPORTANT:
 - Keep explanations beginner-friendly but technically accurate
 - When explaining code, break it down step-by-step`;
 
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
+			const response = await aiFetch("https://api.openai.com/v1/chat/completions", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
