@@ -15,7 +15,7 @@ export default function InsightsLayout({ children }) {
     <div className="insights-white min-h-screen bg-white text-slate-900">
       {/* Hero header */}
       <div className="relative overflow-hidden bg-gradient-to-br from-sky-50 via-indigo-50 to-cyan-50 py-16 pb-8">
-        <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM2MzY2ZjEiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyem0wLTMwVjBoLTJ2NGgyem0tMzAgMGgydi00aC0ydjR6bTMwIDMwaDJWMjJoLTJ2MTJ6TTYgMzRINHYyaDJ2LTJ6bTAtMzBINFYyaDJ2MnoiLz48L2c+PC9nPjwvc3ZnPg==')] opacity-50" />
+        <div className="absolute inset-0 opacity-50" style={{ backgroundImage: "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiM2MzY2ZjEiIGZpbGwtb3BhY2l0eT0iMC4wMyI+PHBhdGggZD0iTTM2IDM0djItSDI0di0yaDEyem0wLTMwVjBoLTJ2NGgyem0tMzAgMGgydi00aC0ydjR6bTMwIDMwaDJWMjJoLTJ2MTJ6TTYgMzRINHYyaDJ2LTJ6bTAtMzBINFYyaDJ2MnoiLz48L2c+PC9nPjwvc3ZnPg==')" }} />
         <div className="relative mx-auto max-w-6xl px-4 text-center">
           <div className="mb-4 inline-flex items-center gap-2 rounded-full bg-sky-100 px-4 py-1.5 text-sm font-semibold text-sky-700">
             <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" className="h-4 w-4">

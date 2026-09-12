@@ -82,7 +82,7 @@ export default function LoginForm({ variant = "institutionalSuite", initialError
             <p className="text-3xl font-bold leading-none text-cyan-300/80">“</p>
             <p className="mt-1 text-[0.95rem] font-medium leading-relaxed xl:text-base">IGYAN AI has transformed how we track student progress and intervene exactly when they need help.</p>
             <footer className="mt-5 flex items-center gap-3">
-              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=80" alt="Dr. Sarah Jenkins" className="h-11 w-11 rounded-full border-2 border-[#f9b24d]/80 object-cover" />
+              <img src="https://images.unsplash.com/photo-1573496359142-b8d87734a5a2?auto=format&fit=crop&w=100&q=80" alt="Dr. Sarah Jenkins" width={44} height={44} loading="lazy" decoding="async" className="h-11 w-11 rounded-full border-2 border-[#f9b24d]/80 object-cover" />
               <span><b className="block text-base">Dr. Sarah Jenkins</b><small className="mt-0.5 block text-sm text-indigo-100">Director of Academics, Future Prep</small></span>
             </footer>
           </blockquote>

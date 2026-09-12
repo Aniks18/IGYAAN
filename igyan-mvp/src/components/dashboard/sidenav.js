@@ -1,4 +1,4 @@
-﻿"use client";
+"use client";
 
 import { useState, useEffect } from "react";
 import Link from "next/link";
@@ -65,14 +65,16 @@ const ROLE_BASED_NAV_CONFIG = {
 		allowedRoles: ['super_admin', 'co_admin', 'faculty'],
 	},
 	facultySubstitution: {
-		allowedRoles: ['super_admin', 'co_admin', 'faculty'],
+		allowedRoles: ['super_admin'],
+		superAdminOnly: true,
 	},
 
 	userManagement: {
 		allowedRoles: ['super_admin', 'co_admin'],
 	},
 	studentManagement: {
-		allowedRoles: ['super_admin', 'co_admin', 'faculty'],
+		allowedRoles: ['super_admin'],
+		superAdminOnly: true,
 	},
 	attendance: {
 		allowedRoles: ['super_admin', 'co_admin', 'faculty', 'parent'],
@@ -85,10 +87,20 @@ const ROLE_BASED_NAV_CONFIG = {
 		allowedRoles: ['super_admin', 'co_admin'],
 	},
 	schoolManagement: {
-		allowedRoles: ['super_admin', 'co_admin'],
+		allowedRoles: ['super_admin'],
+		superAdminOnly: true,
+	},
+	academics: {
+		allowedRoles: ['super_admin'],
+		superAdminOnly: true,
+	},
+	campus: {
+		allowedRoles: ['super_admin'],
+		superAdminOnly: true,
 	},
 	timetable: {
-		allowedRoles: ['super_admin', 'co_admin', 'faculty'],
+		allowedRoles: ['super_admin'],
+		superAdminOnly: true,
 	},
 	eventsManagement: {
 		allowedRoles: ['super_admin', 'co_admin'],
@@ -477,6 +489,72 @@ export default function DashboardSidenav({ isOpen, setIsOpen, isCollapsed, setIs
 			),
 		},
 		{
+			key: 'facultySubstitution',
+			name: "Faculty",
+			href: "/dashboard/faculty-substitution",
+			allowedRoles: ROLE_BASED_NAV_CONFIG.facultySubstitution.allowedRoles,
+			icon: (
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.5"
+					className="h-5 w-5"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
+					/>
+				</svg>
+			),
+		},
+		{
+			key: 'academics',
+			name: "Classes",
+			href: "/dashboard/classes",
+			allowedRoles: ROLE_BASED_NAV_CONFIG.academics.allowedRoles,
+			icon: (
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.5"
+					className="h-5 w-5"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="M3.75 3v11.25A2.25 2.25 0 006 16.5h12a2.25 2.25 0 002.25-2.25V3M3.75 3h16.5M3.75 3h-1.5m18 0h1.5M7.5 21l2.25-4.5m4.5 4.5l-2.25-4.5m-4.5 0h6.75"
+					/>
+				</svg>
+			),
+		},
+		{
+			key: 'campus',
+			name: "Campus",
+			href: "/dashboard/school-profile",
+			allowedRoles: ROLE_BASED_NAV_CONFIG.campus.allowedRoles,
+			icon: (
+				<svg
+					xmlns="http://www.w3.org/2000/svg"
+					viewBox="0 0 24 24"
+					fill="none"
+					stroke="currentColor"
+					strokeWidth="1.5"
+					className="h-5 w-5"
+				>
+					<path
+						strokeLinecap="round"
+						strokeLinejoin="round"
+						d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.5m-15 10.5V10.5M3 21h18M4.5 10.5h15"
+					/>
+				</svg>
+			),
+		},
+		{
 			key: 'schoolManagement',
 			name: "School Management",
 			href: "/dashboard/school-management",
@@ -700,6 +778,8 @@ export default function DashboardSidenav({ isOpen, setIsOpen, isCollapsed, setIs
 							<img
 								src={schoolData.logo_url}
 								alt={schoolData.school_name || "School Logo"}
+								loading="lazy"
+								decoding="async"
 								className="h-10 w-10 shrink-0 rounded-lg object-cover shadow-md"
 							/>
 						) : (
@@ -836,42 +916,44 @@ export default function DashboardSidenav({ isOpen, setIsOpen, isCollapsed, setIs
 						);
 					})}
 
-					{/* I-GYAN AI Suite */}
+					{/* Super Admin Navigation */}
 					{user?.role === 'super_admin' && (
 						<>
-							<div className={`mt-6 mb-2 ${isCollapsed ? "lg:hidden" : ""}`}>
-								<p className="px-3 text-xs font-semibold uppercase tracking-wider text-sky-500 dark:text-sky-400">
-									I-GYAN AI Suite
+							{/* School Management */}
+							<div className={`mt-5 mb-2 ${isCollapsed ? "lg:hidden" : ""}`}>
+								<p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+									School Management
 								</p>
 							</div>
-							{navItems.filter(item => ['copilot', 'gyanisage', 'vivaAi', 'sharkAi', 'contentGenerator', 'tools', 'liveClassroom'].includes(item.key)).map((item) => {
+							{navItems.filter(item => ['studentManagement', 'facultySubstitution', 'academics', 'timetable', 'schoolManagement', 'campus'].includes(item.key)).map((item) => {
 								if (!hasAccess(item.key, item.allowedRoles, item.superAdminOnly)) return null;
 								const isActive = pathname === item.href;
-								const displayName = item.key === 'copilot' ? 'Customise Co-Pilot' :
-									item.key === 'gyanisage' ? 'Buddy AI Counsellor' :
-									item.key === 'vivaAi' ? 'Viva Intelligence' :
-									item.key === 'contentGenerator' ? "Slide's Creator" :
-									item.key === 'tools' ? 'AI Tools Suite' : item.name;
+								const displayName = item.key === 'studentManagement' ? 'Student' :
+									item.key === 'facultySubstitution' ? 'Faculty' :
+									item.key === 'academics' ? 'Classes' :
+									item.key === 'timetable' ? 'Academic Sessions' :
+									item.key === 'schoolManagement' ? 'Transfer' :
+									item.key === 'campus' ? 'Campus' : item.name;
 								return (
 									<Link
 										key={item.key}
 										href={item.href}
 										onClick={() => setIsOpen(false)}
-										className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+										className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
 											isActive
-												? "bg-linear-to-r from-indigo-500/10 to-purple-500/10 text-indigo-600 shadow-sm ring-1 ring-indigo-500/20 dark:from-indigo-500/20 dark:to-purple-500/20 dark:text-indigo-400"
-												: "text-zinc-700 hover:bg-zinc-100/80 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
+												? "bg-[#fff5ed] text-[#ea580c] font-bold shadow-xs ring-1 ring-[#ea580c]/20"
+												: "text-slate-600 hover:bg-slate-100/80 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
 										} ${isCollapsed ? "lg:justify-center lg:px-0" : ""}`}
 										title={isCollapsed ? displayName : ""}
 									>
-										<div className={`${isCollapsed ? "lg:mx-auto" : ""} ${isActive ? "scale-110" : ""} transition-transform`}>
+										<div className={`${isCollapsed ? "lg:mx-auto" : ""} ${isActive ? "scale-110 text-[#ea580c]" : ""} transition-transform`}>
 											{item.icon}
 										</div>
 										<span className={`transition-all duration-300 ${isCollapsed ? "lg:hidden" : ""}`}>
 											{displayName}
 										</span>
 										{isActive && !isCollapsed && (
-											<div className="ml-auto h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
+											<div className="ml-auto h-2 w-2 rounded-full bg-[#ea580c]"></div>
 										)}
 										{isCollapsed && (
 											<div className="invisible absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-zinc-900 px-3 py-2 text-xs font-medium text-white opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100 dark:bg-zinc-100 dark:text-zinc-900 lg:block hidden">
@@ -882,44 +964,37 @@ export default function DashboardSidenav({ isOpen, setIsOpen, isCollapsed, setIs
 									</Link>
 								);
 							})}
-						</>
-					)}
 
-					{/* Academic Operations */}
-					{user?.role === 'super_admin' && (
-						<>
-							<div className={`mt-6 mb-2 ${isCollapsed ? "lg:hidden" : ""}`}>
-								<p className="px-3 text-xs font-semibold uppercase tracking-wider text-emerald-500 dark:text-emerald-400">
-									Academic Operations
+							{/* Communication */}
+							<div className={`mt-5 mb-2 ${isCollapsed ? "lg:hidden" : ""}`}>
+								<p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+									Communication
 								</p>
 							</div>
-							{navItems.filter(item => ['courses', 'studentManagement', 'schoolManagement', 'timetable', 'attendance', 'facultySubstitution'].includes(item.key)).map((item) => {
+							{navItems.filter(item => ['messages', 'eventsManagement'].includes(item.key)).map((item) => {
 								if (!hasAccess(item.key, item.allowedRoles, item.superAdminOnly)) return null;
 								const isActive = pathname === item.href;
-								const displayName = item.key === 'courses' ? 'Courses & Curriculum' :
-									item.key === 'schoolManagement' ? 'School Management' :
-									item.key === 'timetable' ? 'Timetable' :
-									item.key === 'facultySubstitution' ? 'Smart Substitution' : item.name;
+								const displayName = item.key === 'messages' ? 'Communication' : item.name;
 								return (
 									<Link
 										key={item.key}
 										href={item.href}
 										onClick={() => setIsOpen(false)}
-										className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+										className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
 											isActive
-												? "bg-linear-to-r from-indigo-500/10 to-purple-500/10 text-indigo-600 shadow-sm ring-1 ring-indigo-500/20 dark:from-indigo-500/20 dark:to-purple-500/20 dark:text-indigo-400"
-												: "text-zinc-700 hover:bg-zinc-100/80 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
+												? "bg-[#fff5ed] text-[#ea580c] font-bold shadow-xs ring-1 ring-[#ea580c]/20"
+												: "text-slate-600 hover:bg-slate-100/80 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
 										} ${isCollapsed ? "lg:justify-center lg:px-0" : ""}`}
 										title={isCollapsed ? displayName : ""}
 									>
-										<div className={`${isCollapsed ? "lg:mx-auto" : ""} ${isActive ? "scale-110" : ""} transition-transform`}>
+										<div className={`${isCollapsed ? "lg:mx-auto" : ""} ${isActive ? "scale-110 text-[#ea580c]" : ""} transition-transform`}>
 											{item.icon}
 										</div>
 										<span className={`transition-all duration-300 ${isCollapsed ? "lg:hidden" : ""}`}>
 											{displayName}
 										</span>
 										{isActive && !isCollapsed && (
-											<div className="ml-auto h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
+											<div className="ml-auto h-2 w-2 rounded-full bg-[#ea580c]"></div>
 										)}
 										{isCollapsed && (
 											<div className="invisible absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-zinc-900 px-3 py-2 text-xs font-medium text-white opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100 dark:bg-zinc-100 dark:text-zinc-900 lg:block hidden">
@@ -930,135 +1005,80 @@ export default function DashboardSidenav({ isOpen, setIsOpen, isCollapsed, setIs
 									</Link>
 								);
 							})}
-						</>
-					)}
 
-					{/* Institutional Development */}
-					{user?.role === 'super_admin' && (
-						<>
-							<div className={`mt-6 mb-2 ${isCollapsed ? "lg:hidden" : ""}`}>
-								<p className="px-3 text-xs font-semibold uppercase tracking-wider text-purple-500 dark:text-purple-400">
-									Institutional Development
-								</p>
-							</div>
-							{navItems.filter(item => ['incubationHub', 'performance', 'reports', 'questionPaper', 'assignments', 'reportCards', 'bulkUpload'].includes(item.key)).map((item) => {
-								if (!hasAccess(item.key, item.allowedRoles, item.superAdminOnly)) return null;
-								const isActive = pathname === item.href;
-								const displayName = item.key === 'performance' ? 'Performance & Analytics' :
-									item.key === 'reports' ? 'Smart Report Builder' :
-									item.key === 'questionPaper' ? 'Teachers Toolkit' :
-									item.key === 'assignments' ? 'AI Play Zone' :
-									item.key === 'reportCards' ? 'Report Cards Generator' :
-									item.key === 'bulkUpload' ? 'Bulk Data Import' : item.name;
-								return (
-									<Link
-										key={item.key}
-										href={item.href}
-										onClick={() => setIsOpen(false)}
-										className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-											isActive
-												? "bg-linear-to-r from-indigo-500/10 to-purple-500/10 text-indigo-600 shadow-sm ring-1 ring-indigo-500/20 dark:from-indigo-500/20 dark:to-purple-500/20 dark:text-indigo-400"
-												: "text-zinc-700 hover:bg-zinc-100/80 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
-										} ${isCollapsed ? "lg:justify-center lg:px-0" : ""}`}
-										title={isCollapsed ? displayName : ""}
-									>
-										<div className={`${isCollapsed ? "lg:mx-auto" : ""} ${isActive ? "scale-110" : ""} transition-transform`}>
-											{item.icon}
-										</div>
-										<span className={`transition-all duration-300 ${isCollapsed ? "lg:hidden" : ""}`}>
-											{displayName}
-										</span>
-										{isActive && !isCollapsed && (
-											<div className="ml-auto h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
-										)}
-										{isCollapsed && (
-											<div className="invisible absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-zinc-900 px-3 py-2 text-xs font-medium text-white opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100 dark:bg-zinc-100 dark:text-zinc-900 lg:block hidden">
-												{displayName}
-												<div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-zinc-900 dark:border-r-zinc-100"></div>
-											</div>
-										)}
-									</Link>
-								);
-							})}
-						</>
-					)}
-
-					{/* Events & Engagement */}
-					{user?.role === 'super_admin' && (
-						<>
-							<div className={`mt-6 mb-2 ${isCollapsed ? "lg:hidden" : ""}`}>
-								<p className="px-3 text-xs font-semibold uppercase tracking-wider text-amber-500 dark:text-amber-400">
-									Events & Engagement
-								</p>
-							</div>
-							{navItems.filter(item => ['eventsManagement', 'eventsStudent', 'eventsPublic'].includes(item.key)).map((item) => {
-								if (!hasAccess(item.key, item.allowedRoles, item.superAdminOnly)) return null;
-								const isActive = pathname === item.href;
-								return (
-									<Link
-										key={item.key}
-										href={item.href}
-										onClick={() => setIsOpen(false)}
-										className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
-											isActive
-												? "bg-linear-to-r from-indigo-500/10 to-purple-500/10 text-indigo-600 shadow-sm ring-1 ring-indigo-500/20 dark:from-indigo-500/20 dark:to-purple-500/20 dark:text-indigo-400"
-												: "text-zinc-700 hover:bg-zinc-100/80 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
-										} ${isCollapsed ? "lg:justify-center lg:px-0" : ""}`}
-										title={isCollapsed ? item.name : ""}
-									>
-										<div className={`${isCollapsed ? "lg:mx-auto" : ""} ${isActive ? "scale-110" : ""} transition-transform`}>
-											{item.icon}
-										</div>
-										<span className={`transition-all duration-300 ${isCollapsed ? "lg:hidden" : ""}`}>
-											{item.name}
-										</span>
-										{isActive && !isCollapsed && (
-											<div className="ml-auto h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
-										)}
-										{isCollapsed && (
-											<div className="invisible absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-zinc-900 px-3 py-2 text-xs font-medium text-white opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100 dark:bg-zinc-100 dark:text-zinc-900 lg:block hidden">
-												{item.name}
-												<div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-zinc-900 dark:border-r-zinc-100"></div>
-											</div>
-										)}
-									</Link>
-								);
-							})}
-						</>
-					)}
-
-					{/* User Controls */}
-					{user?.role === 'super_admin' && (
-						<>
-							<div className={`mt-6 mb-2 ${isCollapsed ? "lg:hidden" : ""}`}>
-								<p className="px-3 text-xs font-semibold uppercase tracking-wider text-rose-500 dark:text-rose-400">
-									User Controls
+							{/* System & Users */}
+							<div className={`mt-5 mb-2 ${isCollapsed ? "lg:hidden" : ""}`}>
+								<p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+									System & Users
 								</p>
 							</div>
 							{navItems.filter(item => ['userManagement', 'userAccess', 'settings'].includes(item.key)).map((item) => {
 								if (!hasAccess(item.key, item.allowedRoles, item.superAdminOnly)) return null;
 								const isActive = pathname === item.href;
-								const displayName = item.key === 'userAccess' ? 'User Access & Roles' : item.name;
+								const displayName = item.key === 'userAccess' ? 'Access & Roles' : item.name;
 								return (
 									<Link
 										key={item.key}
 										href={item.href}
 										onClick={() => setIsOpen(false)}
-										className={`group relative flex items-center gap-3 rounded-lg px-3 py-2.5 text-sm font-medium transition-all ${
+										className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
 											isActive
-												? "bg-linear-to-r from-indigo-500/10 to-purple-500/10 text-indigo-600 shadow-sm ring-1 ring-indigo-500/20 dark:from-indigo-500/20 dark:to-purple-500/20 dark:text-indigo-400"
-												: "text-zinc-700 hover:bg-zinc-100/80 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
+												? "bg-[#fff5ed] text-[#ea580c] font-bold shadow-xs ring-1 ring-[#ea580c]/20"
+												: "text-slate-600 hover:bg-slate-100/80 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
 										} ${isCollapsed ? "lg:justify-center lg:px-0" : ""}`}
 										title={isCollapsed ? displayName : ""}
 									>
-										<div className={`${isCollapsed ? "lg:mx-auto" : ""} ${isActive ? "scale-110" : ""} transition-transform`}>
+										<div className={`${isCollapsed ? "lg:mx-auto" : ""} ${isActive ? "scale-110 text-[#ea580c]" : ""} transition-transform`}>
 											{item.icon}
 										</div>
 										<span className={`transition-all duration-300 ${isCollapsed ? "lg:hidden" : ""}`}>
 											{displayName}
 										</span>
 										{isActive && !isCollapsed && (
-											<div className="ml-auto h-2 w-2 rounded-full bg-indigo-500 dark:bg-indigo-400"></div>
+											<div className="ml-auto h-2 w-2 rounded-full bg-[#ea580c]"></div>
+										)}
+										{isCollapsed && (
+											<div className="invisible absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-zinc-900 px-3 py-2 text-xs font-medium text-white opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100 dark:bg-zinc-100 dark:text-zinc-900 lg:block hidden">
+												{displayName}
+												<div className="absolute right-full top-1/2 -translate-y-1/2 border-4 border-transparent border-r-zinc-900 dark:border-r-zinc-100"></div>
+											</div>
+										)}
+									</Link>
+								);
+							})}
+
+							{/* I-GYAN AI Suite */}
+							<div className={`mt-5 mb-2 ${isCollapsed ? "lg:hidden" : ""}`}>
+								<p className="px-3 text-xs font-semibold uppercase tracking-wider text-slate-400">
+									AI Suite
+								</p>
+							</div>
+							{navItems.filter(item => ['copilot', 'gyanisage', 'tools', 'liveClassroom'].includes(item.key)).map((item) => {
+								if (!hasAccess(item.key, item.allowedRoles, item.superAdminOnly)) return null;
+								const isActive = pathname === item.href;
+								const displayName = item.key === 'copilot' ? 'Co-Pilot' :
+									item.key === 'gyanisage' ? 'Buddy AI' :
+									item.key === 'tools' ? 'AI Tools' : item.name;
+								return (
+									<Link
+										key={item.key}
+										href={item.href}
+										onClick={() => setIsOpen(false)}
+										className={`group relative flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-medium transition-all ${
+											isActive
+												? "bg-[#fff5ed] text-[#ea580c] font-bold shadow-xs ring-1 ring-[#ea580c]/20"
+												: "text-slate-600 hover:bg-slate-100/80 dark:text-zinc-300 dark:hover:bg-zinc-800/80"
+										} ${isCollapsed ? "lg:justify-center lg:px-0" : ""}`}
+										title={isCollapsed ? displayName : ""}
+									>
+										<div className={`${isCollapsed ? "lg:mx-auto" : ""} ${isActive ? "scale-110 text-[#ea580c]" : ""} transition-transform`}>
+											{item.icon}
+										</div>
+										<span className={`transition-all duration-300 ${isCollapsed ? "lg:hidden" : ""}`}>
+											{displayName}
+										</span>
+										{isActive && !isCollapsed && (
+											<div className="ml-auto h-2 w-2 rounded-full bg-[#ea580c]"></div>
 										)}
 										{isCollapsed && (
 											<div className="invisible absolute left-full top-1/2 z-50 ml-2 -translate-y-1/2 whitespace-nowrap rounded-lg bg-zinc-900 px-3 py-2 text-xs font-medium text-white opacity-0 shadow-lg transition-all group-hover:visible group-hover:opacity-100 dark:bg-zinc-100 dark:text-zinc-900 lg:block hidden">
@@ -1108,6 +1128,15 @@ export default function DashboardSidenav({ isOpen, setIsOpen, isCollapsed, setIs
 						);
 					})}
 				</nav>
+
+				{/* ── Footer ── */}
+				{!isCollapsed && (
+					<div className="mt-auto px-4 py-4 text-center border-t border-slate-100 dark:border-zinc-800">
+						<span className="text-xs text-slate-400 font-normal">
+							Powered by Igyan.ai
+						</span>
+					</div>
+				)}
 			</aside>
 		</>
 	);

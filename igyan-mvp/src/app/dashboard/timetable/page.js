@@ -363,7 +363,7 @@ export default function TimetablePage() {
 		<div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950">
 			{/* ── HERO BANNER ── */}
 			<div className="border-b border-zinc-200 bg-white px-6 py-7 sm:px-8 dark:border-zinc-800 dark:bg-zinc-900">
-				<div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTIwIDBMMCAwIDAgMjB6TTQwIDIwTDIwIDQwIDQwIDQweiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
+				<div className="absolute inset-0 opacity-40" style={{ backgroundImage: "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTIwIDBMMCAwIDAgMjB6TTQwIDIwTDIwIDQwIDQwIDQweiIvPjwvZz48L2c+PC9zdmc+')" }} />
 				<div>
 					<div className="flex items-center gap-3">
 						<div className="flex h-11 w-11 items-center justify-center rounded-xl bg-orange-50 text-xl dark:bg-orange-950/40">◷</div>

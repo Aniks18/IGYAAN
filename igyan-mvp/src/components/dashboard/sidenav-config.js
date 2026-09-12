@@ -84,6 +84,7 @@ export const ROLE_ACCESS = {
 	userManagement:      ['super_admin','co_admin'],
 	userAccess:          ['super_admin'],
 	// Events
+	messages:            ['super_admin','co_admin','faculty','student','counselor','parent'],
 	eventsManagement:    ['super_admin','co_admin'],
 	events:              ['super_admin','co_admin','faculty','student','parent'],
 	eventsStudent:       ['super_admin','co_admin','faculty','student'],
@@ -130,29 +131,78 @@ export function getNavSections(role) {
 	}
 }
 
+// ── Design matching Icons ─────────────────────────────────────────
+const ClassesIcon = (props) => (
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]" {...props}>
+		<rect x="3" y="4" width="18" height="11" rx="2" />
+		<path d="M7 19l2-4" />
+		<path d="M17 19l-2-4" />
+		<path d="M8 9h2" />
+		<path d="M13 9h3" />
+		<path d="M14.5 7.5v3" />
+		<path d="M9 7.5v3" />
+	</svg>
+);
+
+const TransferIcon = (props) => (
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]" {...props}>
+		<circle cx="8" cy="8" r="3" />
+		<path d="M2 17a6 6 0 0 1 10-3" />
+		<circle cx="16" cy="14" r="2.5" />
+		<path d="M12 21a5 5 0 0 1 8-2" />
+		<path d="M19 6l2-2-2-2" />
+		<path d="M21 4h-4" />
+	</svg>
+);
+
+const CampusIcon = (props) => (
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]" {...props}>
+		<path d="M3 21h18" />
+		<path d="M5 21V9l7-5 7 5v12" />
+		<path d="M9 21v-4a3 3 0 0 1 6 0v4" />
+		<path d="M10 9h4" />
+	</svg>
+);
+
+const CommunicationIcon = (props) => (
+	<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round" className="h-[18px] w-[18px]" {...props}>
+		<path d="M21 11.5a8.38 8.38 0 0 1-.9 3.8 8.5 8.5 0 0 1-7.6 4.7 8.38 8.38 0 0 1-3.8-.9L3 21l1.9-5.7a8.38 8.38 0 0 1-.9-3.8 8.5 8.5 0 0 1 4.7-7.6 8.38 8.38 0 0 1 3.8-.9h.5a8.48 8.48 0 0 1 8 8v.5z" />
+	</svg>
+);
+
 // ── Admin / Co-Admin ────────────────────────────────────────────
 const ADMIN_NAV = [
 	{
 		items: [
 			{ key: 'dashboard', name: 'Dashboard', href: '/dashboard', icon: Home },
-			{ key: 'courses', name: 'Learn', href: '/dashboard/courses', icon: BookOpen },
-			{ key: 'copilot', name: 'Co-pilot', href: '/dashboard/copilot', icon: SudarshanIcon, isCustomIcon: true },
-			{ key: 'facultySubstitution', name: 'Smart Substitution System (Faculty)', href: '/dashboard/faculty-substitution', icon: UserCheck },
-			{ key: 'eventsManagement', name: 'Events', href: '/dashboard/events', icon: Calendar },
-			{ key: 'gyanisage', name: 'Buddy AI', href: '/dashboard/gyanisage', icon: BuddyIcon, isCustomIcon: true },
-			{ key: 'schoolManagement', name: 'School Management', href: '/dashboard/school-management', icon: Building2 },
 		],
 	},
 	{
-		label: 'Users',
-		labelColor: 'text-purple-500',
+		label: 'SCHOOL MANAGEMENT',
+		labelColor: 'text-slate-400',
+		items: [
+			{ key: 'studentManagement', name: 'Student', href: '/dashboard/student-management', icon: Users },
+			{ key: 'facultySubstitution', name: 'Faculty', href: '/dashboard/faculty-substitution', icon: UserCheck },
+			{ key: 'academics', name: 'Classes', href: '/dashboard/classes', icon: ClassesIcon, isCustomIcon: true },
+			{ key: 'timetable', name: 'Academic Sessions', href: '/dashboard/timetable', icon: Calendar },
+			{ key: 'schoolManagement', name: 'Transfer', href: '/dashboard/school-management', icon: TransferIcon, isCustomIcon: true },
+			{ key: 'campus', name: 'Campus', href: '/dashboard/campus', icon: CampusIcon, isCustomIcon: true },
+		],
+	},
+	{
+		label: 'COMMUNICATION',
+		labelColor: 'text-slate-400',
+		items: [
+			{ key: 'messages', name: 'Communication', href: '/dashboard/messages', icon: CommunicationIcon, isCustomIcon: true },
+			{ key: 'eventsManagement', name: 'Events', href: '/dashboard/events', icon: Calendar },
+		],
+	},
+	{
+		label: 'SYSTEM & USERS',
+		labelColor: 'text-slate-400',
 		items: [
 			{ key: 'userManagement', name: 'User Management', href: '/dashboard/users', icon: Users },
 			{ key: 'userAccess', name: 'Access & Roles', href: '/dashboard/user-access', icon: Lock },
-		],
-	},
-	{
-		items: [
 			{ key: 'settings', name: 'Settings', href: '/dashboard/settings', icon: Settings },
 		],
 	},

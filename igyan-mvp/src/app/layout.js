@@ -1,48 +1,34 @@
-"use client";
-
-import { usePathname } from "next/navigation";
-import Navbar from "@/components/navbar";
-import Footer from "@/components/footer";
-import { ThemeProvider } from "@/components/theme-provider";
-import { AuthProvider } from "./utils/auth_context";
+import { Inter } from "next/font/google";
+import LayoutWrapper from "@/components/layout-wrapper";
 import "./globals.css";
 
-function LayoutContent({ children }) {
-	const pathname = usePathname();
-	const isDashboard = pathname?.startsWith("/dashboard");
-	const isLogin = pathname === "/login" || pathname?.startsWith("/login/");
-	const isAuthPage = isLogin || pathname === "/forgot-password";
-	const isRegister = pathname?.startsWith("/register/");
+const inter = Inter({
+	subsets: ["latin"],
+	display: "swap",
+	variable: "--font-inter",
+});
 
-	return (
-		<AuthProvider>
-			{isDashboard || isAuthPage || isRegister ? (
-				// Dashboard layout - no navbar/footer
-				<>{children}</>
-			) : (
-				// Public pages layout - with navbar/footer
-				<div className="flex min-h-screen flex-col">
-					<Navbar />
-					<main className="flex-1">{children}</main>
-					<Footer />
-				</div>
-			)}
-		</AuthProvider>
-	);
-}
+export const metadata = {
+	title: "IGYAN AI - Native Operating System for Education",
+	description:
+		"India's AI-Native Operating System for Schools & Colleges. Empowering personalized learning, career pathways, and entrepreneurship readiness.",
+	icons: {
+		icon: "/apple-icon.png",
+		apple: "/apple-icon.png",
+	},
+};
+
+export const viewport = {
+	themeColor: "#05070f",
+	width: "device-width",
+	initialScale: 1,
+};
 
 export default function RootLayout({ children }) {
 	return (
-		<html lang="en" suppressHydrationWarning data-theme="dark" className="dark">
-			<head>
-				<title>IGYAN AI -Native Operating System</title>
-				<link rel="icon" href="/apple-icon.png" type="image/png" />
-				<link rel="apple-touch-icon" href="/apple-icon.png" />
-			</head>
+		<html lang="en" suppressHydrationWarning data-theme="dark" className={`dark ${inter.variable}`}>
 			<body className="antialiased bg-background text-foreground">
-				<ThemeProvider>
-					<LayoutContent>{children}</LayoutContent>
-				</ThemeProvider>
+				<LayoutWrapper>{children}</LayoutWrapper>
 			</body>
 		</html>
 	);
