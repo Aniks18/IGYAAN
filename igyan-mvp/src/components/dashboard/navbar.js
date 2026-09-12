@@ -283,6 +283,8 @@ export default function DashboardNavbar({ onMenuClick, schoolData }) {
 																<img 
 																	src={otherUser.image_base64} 
 																	alt={otherUser.full_name}
+																	loading="lazy"
+																	decoding="async"
 																	className="h-full w-full object-cover"
 																/>
 															) : (
@@ -355,6 +357,8 @@ export default function DashboardNavbar({ onMenuClick, schoolData }) {
 								<img
 									src={user.image_base64}
 									alt={user?.full_name || "User"}
+									loading="lazy"
+									decoding="async"
 									className="h-9 w-9 rounded-full object-cover ring-2 ring-offset-2 ring-indigo-500/30 dark:ring-offset-zinc-900"
 								/>
 							) : (
@@ -413,6 +417,8 @@ export default function DashboardNavbar({ onMenuClick, schoolData }) {
 											<img
 												src={user.image_base64}
 												alt={user?.full_name || "User"}
+												loading="lazy"
+												decoding="async"
 												className={`h-12 w-12 rounded-full object-cover ring-2 ring-offset-2 ${
 													isB2CUser ? 'ring-cyan-500/30' : 'ring-indigo-500/30'
 												}`}

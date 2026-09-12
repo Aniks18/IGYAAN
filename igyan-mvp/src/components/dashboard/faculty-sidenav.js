@@ -194,6 +194,8 @@ export default function FacultySidenav({ isOpen, setIsOpen, isCollapsed, setIsCo
 							<img
 								src={schoolData.logo_url}
 								alt={schoolData.school_name || "School Logo"}
+								loading="lazy"
+								decoding="async"
 								className="h-10 w-10 shrink-0 rounded-lg object-cover shadow-md"
 								style={{ boxShadow: '0 0 0 2px color-mix(in srgb, var(--dashboard-primary) 20%, transparent)' }}
 							/>

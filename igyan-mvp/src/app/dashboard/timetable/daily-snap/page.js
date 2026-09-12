@@ -136,7 +136,7 @@ export default function DailySnapPage() {
 		<div className="min-h-screen bg-zinc-50/50 dark:bg-zinc-950">
 			{/* Hero Banner */}
 			<div className="relative overflow-hidden bg-gradient-to-br from-orange-500 via-amber-500 to-yellow-500 px-6 py-6 sm:px-8">
-				<div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTIwIDBMMCAwIDAgMjB6TTQwIDIwTDIwIDQwIDQwIDQweiIvPjwvZz48L2c+PC9zdmc+')] opacity-40" />
+				<div className="absolute inset-0 opacity-40" style={{ backgroundImage: "url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNDAiIGhlaWdodD0iNDAiIHZpZXdCb3g9IjAgMCA0MCA0MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiNmZmYiIGZpbGwtb3BhY2l0eT0iMC4wNSI+PHBhdGggZD0iTTIwIDBMMCAwIDAgMjB6TTQwIDIwTDIwIDQwIDQwIDQweiIvPjwvZz48L2c+PC9zdmc+')" }} />
 				<div className="relative z-10">
 					<div className="flex items-center justify-between">
 						<div className="flex items-center gap-3">

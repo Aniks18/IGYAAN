@@ -15,6 +15,7 @@ import {
 } from "lucide-react";
 import PremiumStudentDashboard from "../../components/dashboard/premium-student-dashboard";
 import FacultyDashboard from "../../components/dashboard/faculty-dashboard";
+import SuperAdminDashboard from "../../components/dashboard/superadmin-dashboard";
 
 export default function DashboardPage() {
 	const { user, session, loading } = useAuth();
@@ -89,6 +90,10 @@ export default function DashboardPage() {
 	}
 
 	if (!user) return null;
+
+	if (user.role === "super_admin" || user.role === "co_admin") {
+		return <SuperAdminDashboard user={user} />;
+	}
 
 	if (user.role === "faculty") {
 		return <FacultyDashboard user={user} />;

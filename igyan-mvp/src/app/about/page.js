@@ -55,7 +55,7 @@ export default function AboutPage() {
           </div>
           <div className="relative">
             <div className="rounded-3xl bg-gradient-to-br from-indigo-200 via-white to-cyan-100 p-4 shadow-2xl">
-              <div className="relative aspect-square overflow-hidden rounded-2xl bg-slate-100"><Image alt="Glowing ethereal blue sphere representing Sudarshan AI" className="object-cover" src={images.sphere} fill sizes="(max-width: 768px) 100vw, 560px" /></div>
+              <div className="relative aspect-square overflow-hidden rounded-2xl bg-slate-100"><Image alt="Glowing ethereal blue sphere representing Sudarshan AI" className="object-cover" src={images.sphere} fill quality={80} loading="lazy" sizes="(max-width: 768px) 100vw, 560px" /></div>
             </div>
             <div className="absolute -bottom-6 -left-6 -z-10 h-32 w-32 rounded-full bg-cyan-200/70 blur-3xl" />
           </div>
@@ -74,7 +74,7 @@ export default function AboutPage() {
       <section className="relative overflow-hidden bg-gradient-to-r from-indigo-900 via-purple-900 to-indigo-950 px-6 py-20 text-white sm:px-10 md:py-28">
         <div className="relative z-10 mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-12">
           <div className="lg:col-span-7"><h2 className="mb-8 text-4xl font-bold tracking-tight sm:text-5xl">The Future of Talent is Motion</h2><p className="mb-12 text-lg leading-relaxed text-indigo-100">Our vision extends beyond the classroom. We imagine a world where the friction between learning and earning is eliminated. A world where an AI-native OS manages the complexities of curriculum, assessment, and career matching, allowing humans to focus on what they do best: creating, leading, and innovating.</p><div className="grid grid-cols-2 gap-8"><div className="border-l-2 border-cyan-300 pl-6"><div className="mb-1 text-4xl font-bold">1M+</div><div className="text-sm text-indigo-200">Students Empowered by 2026</div></div><div className="border-l-2 border-cyan-300 pl-6"><div className="mb-1 text-4xl font-bold">500+</div><div className="text-sm text-indigo-200">Partner Institutions Globally</div></div></div></div>
-          <div className="lg:col-span-5"><div className="rounded-3xl border-4 border-white/15 bg-white/10 p-2 shadow-2xl"><div className="relative aspect-[4/5] overflow-hidden rounded-2xl"><Image alt="Student wearing an AR learning headset" className="object-cover" src={images.vision} fill sizes="(max-width: 1024px) 100vw, 420px" /></div></div></div>
+          <div className="lg:col-span-5"><div className="rounded-3xl border-4 border-white/15 bg-white/10 p-2 shadow-2xl"><div className="relative aspect-[4/5] overflow-hidden rounded-2xl"><Image alt="Student wearing an AR learning headset" className="object-cover" src={images.vision} fill quality={80} loading="lazy" sizes="(max-width: 1024px) 100vw, 420px" /></div></div></div>
         </div>
       </section>
 
