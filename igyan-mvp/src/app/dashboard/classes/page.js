@@ -506,6 +506,85 @@ const INITIAL_ACTIVITY = [
 	{ id: "act-4", title: "Unit Test 1 Scheduled", desc: "Science & English midterm evaluations announced for next week.", time: "08 Sep 2026", type: "exam" },
 ];
 
+// Custom sleek dropdown selector matching modern Tailwind design
+function CustomSelect({ value, onChange, options, placeholder = "Select...", className = "" }) {
+	const [isOpen, setIsOpen] = useState(false);
+	const containerRef = useRef(null);
+
+	useEffect(() => {
+		const handleClickOutside = (event) => {
+			if (containerRef.current && !containerRef.current.contains(event.target)) {
+				setIsOpen(false);
+			}
+		};
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => document.removeEventListener("mousedown", handleClickOutside);
+	}, []);
+
+	const selectedOption = options.find((opt) => String(opt.value) === String(value));
+
+	return (
+		<div className={`relative ${className}`} ref={containerRef}>
+			<button
+				type="button"
+				onClick={() => setIsOpen((prev) => !prev)}
+				className={`w-full flex items-center justify-between gap-2 rounded-xl border bg-white px-3 py-2 text-xs font-semibold text-slate-800 transition-all cursor-pointer ${
+					isOpen ? "border-[#ea580c] ring-2 ring-[#ea580c]/15 shadow-xs" : "border-slate-200 hover:border-slate-300"
+				}`}
+			>
+				<div className="flex items-center gap-2 truncate text-left">
+					{selectedOption?.icon && <span className="shrink-0">{selectedOption.icon}</span>}
+					<span className="truncate">{selectedOption ? selectedOption.label : placeholder}</span>
+				</div>
+				<ChevronDown className={`h-4 w-4 shrink-0 text-slate-400 transition-transform duration-200 ${isOpen ? "rotate-180 text-[#ea580c]" : ""}`} />
+			</button>
+
+			{isOpen && (
+				<div className="absolute left-0 right-0 top-full mt-1.5 z-50 max-h-56 overflow-y-auto rounded-xl border border-slate-100 bg-white p-1.5 shadow-2xl ring-1 ring-slate-900/5 animate-in fade-in-0 zoom-in-95 [scrollbar-width:thin]">
+					{options.map((opt) => {
+						const isSelected = String(opt.value) === String(value);
+						return (
+							<button
+								key={opt.value}
+								type="button"
+								onClick={() => {
+									onChange(opt.value);
+									setIsOpen(false);
+								}}
+								className={`flex w-full items-center justify-between gap-2 rounded-lg px-2.5 py-2 text-left text-xs font-medium transition-colors cursor-pointer ${
+									isSelected
+										? "bg-[#fff7ed] text-[#ea580c] font-semibold"
+										: "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+								}`}
+							>
+								<div className="flex items-center gap-2.5 truncate">
+									{opt.icon && <span className="shrink-0">{opt.icon}</span>}
+									<div className="truncate">
+										<p className={`truncate text-xs ${isSelected ? "text-[#ea580c] font-bold" : "text-slate-800 font-semibold"}`}>{opt.label}</p>
+										{opt.sublabel && <p className="text-[10px] text-slate-400 truncate">{opt.sublabel}</p>}
+									</div>
+								</div>
+								{isSelected && <Check className="h-3.5 w-3.5 shrink-0 text-[#ea580c]" />}
+							</button>
+						);
+					})}
+				</div>
+			)}
+		</div>
+	);
+}
+
+const GRADE_OPTIONS = [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => ({
+	value: String(g),
+	label: `Class ${g}`,
+}));
+
+const GENDER_OPTIONS = [
+	{ value: "Male", label: "Male" },
+	{ value: "Female", label: "Female" },
+	{ value: "Other", label: "Other" },
+];
+
 export default function ClassesManagementPage() {
 	const { user, loading } = useAuth();
 	const router = useRouter();
@@ -517,6 +596,7 @@ export default function ClassesManagementPage() {
 	const [activeTab, setActiveTab] = useState("overview"); // overview | students | subjects | teachers | timetable
 	const [searchQuery, setSearchQuery] = useState("");
 	const [expandedGrades, setExpandedGrades] = useState({ "grade-1": true, "grade-2": false, "grade-3": false, "grade-4": false, "grade-5": false });
+	const [toastMsg, setToastMsg] = useState("");
 
 	// Modals
 	const [showAddClassModal, setShowAddClassModal] = useState(false);
@@ -524,6 +604,19 @@ export default function ClassesManagementPage() {
 	const [showAddStudentModal, setShowAddStudentModal] = useState(false);
 	const [showAssignSubjectModal, setShowAssignSubjectModal] = useState(false);
 	const [showActionDropdown, setShowActionDropdown] = useState(false);
+
+	const teacherSelectOptions = useMemo(() => {
+		return DEMO_TEACHERS.map((t) => ({
+			value: t.name,
+			label: t.name,
+			sublabel: t.role,
+			icon: (
+				<div className={`h-5 w-5 rounded-md flex items-center justify-center text-white font-bold text-[8px] shrink-0 ${t.avatarBg}`}>
+					{t.name.split(" ").map((n) => n[0]).join("")}
+				</div>
+			),
+		}));
+	}, []);
 
 	// Auth & Role protection - super_admin only
 	useEffect(() => {
@@ -1473,17 +1566,11 @@ export default function ClassesManagementPage() {
 							<div className="grid grid-cols-2 gap-3">
 								<div>
 									<label className="font-bold text-slate-700 block mb-1">Grade Level *</label>
-									<select
+									<CustomSelect
 										value={newClassGrade}
-										onChange={(e) => setNewClassGrade(e.target.value)}
-										className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold focus:border-[#ea580c] focus:outline-hidden focus:ring-2 focus:ring-[#ea580c]/10"
-									>
-										{[1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12].map((g) => (
-											<option key={g} value={g}>
-												Class {g}
-											</option>
-										))}
-									</select>
+										onChange={(val) => setNewClassGrade(val)}
+										options={GRADE_OPTIONS}
+									/>
 								</div>
 
 								<div>
@@ -1502,17 +1589,11 @@ export default function ClassesManagementPage() {
 
 							<div>
 								<label className="font-bold text-slate-700 block mb-1">Assign Class Teacher *</label>
-								<select
+								<CustomSelect
 									value={newClassTeacher}
-									onChange={(e) => setNewClassTeacher(e.target.value)}
-									className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold focus:border-[#ea580c] focus:outline-hidden focus:ring-2 focus:ring-[#ea580c]/10"
-								>
-									{DEMO_TEACHERS.map((t) => (
-										<option key={t.id} value={t.name}>
-											{t.name} ({t.role})
-										</option>
-									))}
-								</select>
+									onChange={(val) => setNewClassTeacher(val)}
+									options={teacherSelectOptions}
+								/>
 							</div>
 
 							<div className="grid grid-cols-2 gap-3">
@@ -1668,15 +1749,11 @@ export default function ClassesManagementPage() {
 
 								<div>
 									<label className="font-bold text-slate-700 block mb-1">Gender</label>
-									<select
+									<CustomSelect
 										value={newStudentGender}
-										onChange={(e) => setNewStudentGender(e.target.value)}
-										className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold focus:border-[#ea580c] focus:outline-hidden focus:ring-2 focus:ring-[#ea580c]/10"
-									>
-										<option value="Male">Male</option>
-										<option value="Female">Female</option>
-										<option value="Other">Other</option>
-									</select>
+										onChange={(val) => setNewStudentGender(val)}
+										options={GENDER_OPTIONS}
+									/>
 								</div>
 							</div>
 
@@ -1765,17 +1842,11 @@ export default function ClassesManagementPage() {
 
 							<div>
 								<label className="font-bold text-slate-700 block mb-1">Subject Teacher *</label>
-								<select
+								<CustomSelect
 									value={newSubjectTeacher}
-									onChange={(e) => setNewSubjectTeacher(e.target.value)}
-									className="w-full rounded-xl border border-slate-200 bg-white px-3 py-2 text-xs font-semibold focus:border-[#ea580c] focus:outline-hidden focus:ring-2 focus:ring-[#ea580c]/10"
-								>
-									{DEMO_TEACHERS.map((t) => (
-										<option key={t.id} value={t.name}>
-											{t.name} ({t.role})
-										</option>
-									))}
-								</select>
+									onChange={(val) => setNewSubjectTeacher(val)}
+									options={teacherSelectOptions}
+								/>
 							</div>
 
 							<div className="pt-3 flex items-center justify-end gap-2 border-t border-slate-100">

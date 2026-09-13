@@ -5,6 +5,18 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../utils/auth_context";
 import { supabase } from "../../utils/supabase";
 import Link from "next/link";
+import {
+	Building2,
+	Upload,
+	X,
+	CheckCircle2,
+	AlertTriangle,
+	Loader2,
+	Trash2,
+	ChevronDown,
+	FileText,
+	Check,
+} from "lucide-react";
 
 export default function SchoolProfilePage() {
 	const { user, loading } = useAuth();
@@ -15,9 +27,9 @@ export default function SchoolProfilePage() {
 	const [uploadingFile, setUploadingFile] = useState("");
 	const [schoolExists, setSchoolExists] = useState(false);
 	const [formData, setFormData] = useState({
-		school_name: "",
-		school_type: "",
-		affiliation_board: "",
+		school_name: "Litera Valley",
+		school_type: "Higher Secondary",
+		affiliation_board: "CBSE",
 		address_line1: "",
 		address_line2: "",
 		city: "",
@@ -47,9 +59,7 @@ export default function SchoolProfilePage() {
 			if (!user?.id) return;
 
 			try {
-				// Check if user has school_id
 				if (!user.school_id) {
-					// No school linked yet — check if they previously created one (fallback)
 					const { data: createdSchool } = await supabase
 						.from("schools")
 						.select("*")
@@ -59,17 +69,17 @@ export default function SchoolProfilePage() {
 					if (createdSchool) {
 						setSchoolExists(true);
 						setFormData({
-							school_name: createdSchool.school_name || "",
-							school_type: createdSchool.school_type || "",
-							affiliation_board: createdSchool.affiliation_board || "",
+							school_name: createdSchool.school_name || "Litera Valley",
+							school_type: createdSchool.school_type || "Higher Secondary",
+							affiliation_board: createdSchool.affiliation_board || "CBSE",
 							address_line1: createdSchool.address_line1 || "",
 							address_line2: createdSchool.address_line2 || "",
 							city: createdSchool.city || "",
 							state: createdSchool.state || "",
 							pincode: createdSchool.pincode || "",
 							country: createdSchool.country || "India",
-							contact_email: createdSchool.contact_email || "",
-							contact_phone: createdSchool.contact_phone || "",
+							contact_email: createdSchool.contact_email || user.email || "",
+							contact_phone: createdSchool.contact_phone || user.phone || "",
 							principal_name: createdSchool.principal_name || "",
 							principal_email: createdSchool.principal_email || "",
 							principal_phone: createdSchool.principal_phone || "",
@@ -79,14 +89,17 @@ export default function SchoolProfilePage() {
 							affiliation_certificate_url: createdSchool.affiliation_certificate_url || "",
 							principal_id_proof_url: createdSchool.principal_id_proof_url || "",
 						});
+					} else {
+						// Pre-fill with user default email and phone
+						setFormData((prev) => ({
+							...prev,
+							contact_email: user.email || "",
+							contact_phone: user.phone || "",
+						}));
 					}
-					// If no school found at all, form stays empty for new creation
 					return;
 				}
 
-				console.log("Fetching school data for school_id:", user.school_id);
-
-				// Fetch school by user's school_id
 				const { data, error: fetchError } = await supabase
 					.from("schools")
 					.select("*")
@@ -101,17 +114,17 @@ export default function SchoolProfilePage() {
 				if (data) {
 					setSchoolExists(true);
 					setFormData({
-						school_name: data.school_name || "",
-						school_type: data.school_type || "",
-						affiliation_board: data.affiliation_board || "",
+						school_name: data.school_name || "Litera Valley",
+						school_type: data.school_type || "Higher Secondary",
+						affiliation_board: data.affiliation_board || "CBSE",
 						address_line1: data.address_line1 || "",
 						address_line2: data.address_line2 || "",
 						city: data.city || "",
 						state: data.state || "",
 						pincode: data.pincode || "",
 						country: data.country || "India",
-						contact_email: data.contact_email || "",
-						contact_phone: data.contact_phone || "",
+						contact_email: data.contact_email || user.email || "",
+						contact_phone: data.contact_phone || user.phone || "",
 						principal_name: data.principal_name || "",
 						principal_email: data.principal_email || "",
 						principal_phone: data.principal_phone || "",
@@ -181,7 +194,6 @@ export default function SchoolProfilePage() {
 		setSuccess("");
 
 		try {
-			// Validate required fields
 			if (
 				!formData.school_name ||
 				!formData.school_type ||
@@ -192,18 +204,16 @@ export default function SchoolProfilePage() {
 				!formData.contact_email ||
 				!formData.contact_phone
 			) {
-				setError("Please fill in all required fields");
+				setError("Please fill in all required fields marked with *");
 				setSaving(false);
 				return;
 			}
 
-			// Generate subdomain from school name
 			const subdomain = formData.school_name
 				.toLowerCase()
 				.replace(/[^a-z0-9]/g, "");
 
 			if (schoolExists) {
-				// Update existing school
 				const { error: updateError } = await supabase
 					.from("schools")
 					.update({
@@ -232,11 +242,8 @@ export default function SchoolProfilePage() {
 					})
 					.eq("created_by", user.id);
 
-				if (updateError) {
-					throw updateError;
-				}
+				if (updateError) throw updateError;
 			} else {
-				// Create new school and link to user
 				const { data: newSchool, error: insertError } = await supabase
 					.from("schools")
 					.insert([
@@ -268,11 +275,8 @@ export default function SchoolProfilePage() {
 					.select()
 					.single();
 
-				if (insertError) {
-					throw insertError;
-				}
+				if (insertError) throw insertError;
 
-				// Link school_id to the user's record
 				if (newSchool?.id) {
 					await supabase
 						.from("users")
@@ -285,11 +289,9 @@ export default function SchoolProfilePage() {
 
 			setSuccess("School profile updated successfully!");
 			window.scrollTo({ top: 0, behavior: "smooth" });
-
-			// Reload after 1.5 seconds to refresh navbar/sidebar
 			setTimeout(() => {
-				window.location.reload();
-			}, 1500);
+				setSuccess("");
+			}, 3500);
 		} catch (err) {
 			console.error("Error updating school:", err);
 			setError(err.message || "Failed to update school profile. Please try again.");
@@ -300,10 +302,10 @@ export default function SchoolProfilePage() {
 
 	if (loading) {
 		return (
-			<div className="flex min-h-screen items-center justify-center">
+			<div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
 				<div className="text-center">
-					<div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
-					<p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
+					<div className="mx-auto h-10 w-10 animate-spin rounded-full border-3 border-orange-500 border-t-transparent" />
+					<p className="mt-4 text-xs font-semibold text-slate-500">
 						Loading school profile...
 					</p>
 				</div>
@@ -313,131 +315,58 @@ export default function SchoolProfilePage() {
 
 	if (!user) return null;
 
-	const isFaculty = user.role === 'faculty';
+	const isFaculty = user.role === "faculty";
 	const isViewOnly = isFaculty;
 
 	return (
-		<div className="p-6 lg:p-8">
-			{/* Header */}
-			<div className="mb-8 flex items-center justify-between">
-				<div>
-					<h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
-						School Profile
-					</h1>
-					<p className="mt-2 text-zinc-600 dark:text-zinc-400">
-						{isViewOnly ? 'View your school information and details' : 'Manage your school information and branding'}
-					</p>
-				</div>
-				<Link
-					href="/dashboard/settings"
-					className="flex items-center gap-2 rounded-lg border border-zinc-300 px-4 py-2 text-sm font-medium text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="1.5"
-						className="h-4 w-4"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-						/>
-					</svg>
-					Back to Settings
-				</Link>
-			</div>
+		<div className="min-h-full bg-[#f8fafc] p-4 text-[#1e293b] sm:p-6 lg:p-7">
+			<div className="mx-auto max-w-[1520px] space-y-6">
+				{/* Success Alert */}
+				{success && (
+					<div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800 animate-in fade-in">
+						<CheckCircle2 className="h-4 w-4 text-emerald-600 shrink-0" />
+						<span>{success}</span>
+					</div>
+				)}
 
-			{/* Success Message */}
-			{success && (
-				<div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-600 dark:border-green-900/50 dark:bg-green-900/20 dark:text-green-300">
-					{success}
-				</div>
-			)}
+				{/* Error Alert */}
+				{error && (
+					<div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-800 animate-in fade-in">
+						<AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+						<span>{error}</span>
+					</div>
+				)}
 
-			{/* Error Message */}
-			{error && (
-				<div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
-					{error}
-				</div>
-			)}
-
-			{/* View-Only Notice for Faculty */}
-			{isViewOnly && (
-				<div className="mb-6 rounded-lg border border-blue-200 bg-blue-50 px-4 py-3 text-sm text-blue-600 dark:border-blue-900/50 dark:bg-blue-900/20 dark:text-blue-300 flex items-center gap-2">
-					<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-						<path strokeLinecap="round" strokeLinejoin="round" d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z" />
-					</svg>
-					<span>You are viewing school information in read-only mode. Contact your administrator to make changes.</span>
-				</div>
-			)}
-
-			{/* School Profile Form */}
-			<form onSubmit={handleSubmit} className="space-y-6">
-				{/* Basic Information */}
-				<div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-					<h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-6">
-						Basic Information
-					</h3>
-					<div className="space-y-6">
-						{/* School Name */}
-						<div>
-							<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-								School Name <span className="text-red-500">*</span>
-							</label>
-							<input
-								type="text"
-								name="school_name"
-								value={formData.school_name}
-								onChange={handleChange}
-								placeholder="Enter school name"
-								className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-								required
-								disabled={isViewOnly}
-							/>
-						</div>
-
+				{/* Form */}
+				<form onSubmit={handleSubmit} className="space-y-6">
+					{/* ── 1. School Identity & Logo Card ── */}
+					<div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm space-y-6">
 						{/* School Logo */}
 						<div>
-							<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+							<label className="block text-xs font-bold text-slate-700 mb-3">
 								School Logo
 							</label>
-							<div className="flex items-start gap-4">
+							<div className="flex items-center gap-4">
 								{formData.logo_url ? (
 									<div className="relative">
 										<img
 											src={formData.logo_url}
 											alt="School Logo"
-											className="h-24 w-24 rounded-lg border-2 border-zinc-200 object-cover dark:border-zinc-700"
+											className="h-20 w-20 rounded-2xl border border-slate-200 object-cover shadow-2xs"
 										/>
 										{!isViewOnly && (
 											<button
 												type="button"
 												onClick={() => removeFile("logo_url")}
-												className="absolute -right-2 -top-2 rounded-full bg-red-500 p-1 text-white shadow-lg hover:bg-red-600"
+												className="absolute -right-1.5 -top-1.5 flex h-5 w-5 items-center justify-center rounded-full bg-rose-500 text-white shadow-md hover:bg-rose-600 transition"
 											>
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-													strokeWidth="2"
-													className="h-4 w-4"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														d="M6 18L18 6M6 6l12 12"
-													/>
-												</svg>
+												<X className="h-3 w-3 stroke-[2.5]" />
 											</button>
 										)}
 									</div>
 								) : (
 									!isViewOnly && (
-										<label className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 transition-colors hover:border-indigo-500 hover:bg-indigo-50 dark:border-zinc-700 dark:bg-zinc-800">
+										<label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-2xl border-2 border-dashed border-slate-300 bg-slate-50 transition hover:border-orange-500 hover:bg-orange-50/30">
 											<input
 												type="file"
 												accept="image/jpeg,image/jpg,image/png"
@@ -446,107 +375,117 @@ export default function SchoolProfilePage() {
 												disabled={uploadingFile === "logo_url"}
 											/>
 											{uploadingFile === "logo_url" ? (
-												<svg className="h-6 w-6 animate-spin text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-													<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-													<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-												</svg>
+												<Loader2 className="h-5 w-5 animate-spin text-orange-600" />
 											) : (
-												<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6 text-zinc-400">
-													<path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" />
-												</svg>
+												<Upload className="h-5 w-5 text-slate-400" />
 											)}
 										</label>
 									)
 								)}
-								<div className="flex-1">
-									<p className="text-sm text-zinc-600 dark:text-zinc-400">Upload your school logo</p>
-									<p className="mt-1 text-xs text-zinc-500">Max 5MB. Recommended: 512x512px</p>
+								<div>
+									<p className="text-xs font-bold text-slate-800">
+										Upload your school logo
+									</p>
+									<p className="mt-0.5 text-[11px] text-slate-500">
+										Max 5MB. Recommended: 512×512px
+									</p>
 								</div>
 							</div>
 						</div>
 
-						<div className="grid gap-6 sm:grid-cols-2">
+						{/* School Type & Affiliation Board */}
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 							{/* School Type */}
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									School Type <span className="text-red-500">*</span>
+								<label className="block text-xs font-bold text-slate-700 mb-1.5">
+									School Type <span className="text-rose-500">*</span>
 								</label>
-								<select
-									name="school_type"
-									value={formData.school_type}
-									onChange={handleChange}
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-									required
-									disabled={isViewOnly}
-								>
-									<option value="">Select type</option>
-									<option value="primary">Primary School</option>
-									<option value="secondary">Secondary School</option>
-									<option value="higher_secondary">Higher Secondary</option>
-									<option value="college">College</option>
-									<option value="university">University</option>
-								</select>
+								<div className="relative">
+									<select
+										name="school_type"
+										value={formData.school_type}
+										onChange={handleChange}
+										disabled={isViewOnly}
+										className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-9 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
+										required
+									>
+										<option value="Higher Secondary">Higher Secondary</option>
+										<option value="Secondary">Secondary</option>
+										<option value="Middle School">Middle School</option>
+										<option value="Primary School">Primary School</option>
+										<option value="K-12 School">K-12 School</option>
+										<option value="Junior College">Junior College</option>
+									</select>
+									<ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+								</div>
 							</div>
 
 							{/* Affiliation Board */}
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+								<label className="block text-xs font-bold text-slate-700 mb-1.5">
 									Affiliation Board
 								</label>
-								<input
-									type="text"
-									name="affiliation_board"
-									value={formData.affiliation_board}
-									onChange={handleChange}
-									placeholder="CBSE, ICSE, State Board, etc."
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-									disabled={isViewOnly}
-								/>
-							</div>
-
-							{/* UDISE Code */}
-							<div className="sm:col-span-2">
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									UDISE Code
-								</label>
-								<input
-									type="text"
-									name="udise_code"
-									value={formData.udise_code}
-									onChange={handleChange}
-									placeholder="Enter UDISE code"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-									disabled={isViewOnly}
-								/>
+								<div className="relative">
+									<select
+										name="affiliation_board"
+										value={formData.affiliation_board}
+										onChange={handleChange}
+										disabled={isViewOnly}
+										className="w-full appearance-none rounded-xl border border-slate-200 bg-white px-4 py-2.5 pr-9 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
+									>
+										<option value="CBSE">CBSE</option>
+										<option value="ICSE">ICSE</option>
+										<option value="State Board">State Board</option>
+										<option value="IB (International Baccalaureate)">IB (International Baccalaureate)</option>
+										<option value="Cambridge (IGCSE)">Cambridge (IGCSE)</option>
+										<option value="Other">Other</option>
+									</select>
+									<ChevronDown className="pointer-events-none absolute right-3 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+								</div>
 							</div>
 						</div>
-					</div>
-				</div>
 
-				{/* Address Information */}
-				<div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-					<h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-6">
-						Address
-					</h3>
-					<div className="space-y-6">
+						{/* UDISE Code */}
 						<div>
-							<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-								Address Line 1 <span className="text-red-500">*</span>
+							<label className="block text-xs font-bold text-slate-700 mb-1.5">
+								UDISE Code
+							</label>
+							<input
+								type="text"
+								name="udise_code"
+								value={formData.udise_code}
+								onChange={handleChange}
+								placeholder="Enter UDISE code"
+								disabled={isViewOnly}
+								className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
+							/>
+						</div>
+					</div>
+
+					{/* ── 2. Address Card ── */}
+					<div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm space-y-5">
+						<h3 className="text-base font-extrabold text-[#0f172a]">Address</h3>
+
+						{/* Address Line 1 */}
+						<div>
+							<label className="block text-xs font-bold text-slate-700 mb-1.5">
+								Address Line 1 <span className="text-rose-500">*</span>
 							</label>
 							<input
 								type="text"
 								name="address_line1"
 								value={formData.address_line1}
 								onChange={handleChange}
-								placeholder="Street address"
-								className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-								required
+								placeholder="SOMEWHERE IN BIHAR"
 								disabled={isViewOnly}
+								className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
+								required
 							/>
 						</div>
 
+						{/* Address Line 2 */}
 						<div>
-							<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+							<label className="block text-xs font-bold text-slate-700 mb-1.5">
 								Address Line 2
 							</label>
 							<input
@@ -555,122 +494,123 @@ export default function SchoolProfilePage() {
 								value={formData.address_line2}
 								onChange={handleChange}
 								placeholder="Apartment, suite, etc. (optional)"
-								className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
 								disabled={isViewOnly}
+								className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
 							/>
 						</div>
 
-						<div className="grid gap-6 sm:grid-cols-3">
+						{/* City, State, PIN, Country Grid */}
+						<div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									City <span className="text-red-500">*</span>
+								<label className="block text-xs font-bold text-slate-700 mb-1.5">
+									City <span className="text-rose-500">*</span>
 								</label>
 								<input
 									type="text"
 									name="city"
 									value={formData.city}
 									onChange={handleChange}
-									placeholder="City"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-									required
+									placeholder="PATNA"
 									disabled={isViewOnly}
+									className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
+									required
 								/>
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									State <span className="text-red-500">*</span>
+								<label className="block text-xs font-bold text-slate-700 mb-1.5">
+									State <span className="text-rose-500">*</span>
 								</label>
 								<input
 									type="text"
 									name="state"
 									value={formData.state}
 									onChange={handleChange}
-									placeholder="State"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-									required
+									placeholder="BIHAR"
 									disabled={isViewOnly}
+									className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
+									required
 								/>
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									PIN Code <span className="text-red-500">*</span>
+								<label className="block text-xs font-bold text-slate-700 mb-1.5">
+									PIN Code <span className="text-rose-500">*</span>
 								</label>
 								<input
 									type="text"
 									name="pincode"
 									value={formData.pincode}
 									onChange={handleChange}
-									placeholder="PIN code"
-									maxLength={10}
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-									required
+									placeholder="202001"
 									disabled={isViewOnly}
+									className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
+									required
+								/>
+							</div>
+
+							<div>
+								<label className="block text-xs font-bold text-slate-700 mb-1.5">
+									Country
+								</label>
+								<input
+									type="text"
+									name="country"
+									value={formData.country}
+									onChange={handleChange}
+									placeholder="India"
+									disabled={isViewOnly}
+									className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
 								/>
 							</div>
 						</div>
-
-						<div>
-							<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-								Country
-							</label>
-							<input
-								type="text"
-								name="country"
-								value={formData.country}
-								onChange={handleChange}
-								placeholder="Country"
-								className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-								disabled={isViewOnly}
-							/>
-						</div>
 					</div>
-				</div>
 
-				{/* Contact Information */}
-				<div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-					<h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-6">
-						Contact Information
-					</h3>
-					<div className="space-y-6">
-						<div className="grid gap-6 sm:grid-cols-2">
+					{/* ── 3. Contact Information Card ── */}
+					<div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm space-y-5">
+						<h3 className="text-base font-extrabold text-[#0f172a]">
+							Contact Information
+						</h3>
+
+						{/* Contact Email & Phone */}
+						<div className="grid grid-cols-1 md:grid-cols-2 gap-5">
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									Contact Email <span className="text-red-500">*</span>
+								<label className="block text-xs font-bold text-slate-700 mb-1.5">
+									Contact Email <span className="text-rose-500">*</span>
 								</label>
 								<input
 									type="email"
 									name="contact_email"
 									value={formData.contact_email}
 									onChange={handleChange}
-									placeholder="school@example.com"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-									required
+									placeholder="akshat@gmail.com"
 									disabled={isViewOnly}
+									className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
+									required
 								/>
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									Contact Phone <span className="text-red-500">*</span>
+								<label className="block text-xs font-bold text-slate-700 mb-1.5">
+									Contact Phone <span className="text-rose-500">*</span>
 								</label>
 								<input
 									type="tel"
 									name="contact_phone"
 									value={formData.contact_phone}
 									onChange={handleChange}
-									placeholder="+91 1234567890"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
-									required
+									placeholder="7668291228"
 									disabled={isViewOnly}
+									className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
+									required
 								/>
 							</div>
 						</div>
 
-						<div className="grid gap-6 sm:grid-cols-3">
+						{/* Principal Name, Email, Phone Grid */}
+						<div className="grid grid-cols-1 md:grid-cols-3 gap-5">
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+								<label className="block text-xs font-bold text-slate-700 mb-1.5">
 									Principal Name
 								</label>
 								<input
@@ -678,14 +618,14 @@ export default function SchoolProfilePage() {
 									name="principal_name"
 									value={formData.principal_name}
 									onChange={handleChange}
-									placeholder="Principal's name"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
+									placeholder="AKSHAT A"
 									disabled={isViewOnly}
+									className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
 								/>
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+								<label className="block text-xs font-bold text-slate-700 mb-1.5">
 									Principal Email
 								</label>
 								<input
@@ -694,13 +634,13 @@ export default function SchoolProfilePage() {
 									value={formData.principal_email}
 									onChange={handleChange}
 									placeholder="principal@example.com"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
 									disabled={isViewOnly}
+									className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
 								/>
 							</div>
 
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+								<label className="block text-xs font-bold text-slate-700 mb-1.5">
 									Principal Phone
 								</label>
 								<input
@@ -708,172 +648,194 @@ export default function SchoolProfilePage() {
 									name="principal_phone"
 									value={formData.principal_phone}
 									onChange={handleChange}
-									placeholder="+91 1234567890"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white disabled:opacity-60 disabled:cursor-not-allowed"
+									placeholder="+911234567890"
 									disabled={isViewOnly}
+									className="w-full rounded-xl border border-slate-200 bg-white px-4 py-2.5 text-xs font-medium text-slate-800 shadow-2xs transition focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/15 disabled:opacity-60"
 								/>
 							</div>
 						</div>
 					</div>
-				</div>
 
-				{/* Documents */}
-				<div className="rounded-2xl border border-zinc-200 bg-white p-6 shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-					<h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-6">
-						Verification Documents
-					</h3>
-					<div className="space-y-6">
-						{/* Registration Certificate */}
+					{/* ── 4. Verification Documents Card ── */}
+					<div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm space-y-4">
+						<h3 className="text-base font-extrabold text-[#0f172a]">
+							Verification Documents
+						</h3>
+
+						{/* Document 1: School Registration Certificate */}
 						<div>
-							<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+							<label className="block text-xs font-bold text-slate-700 mb-1.5">
 								School Registration Certificate
 							</label>
 							{formData.registration_certificate_url ? (
-								<div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
-									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-green-500">
-										<path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-									</svg>
-									<div className="flex-1">
-										<p className="text-sm font-medium text-zinc-900 dark:text-white">File uploaded</p>
+								<div className="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-200 p-3.5">
+									<div className="flex items-center gap-2.5">
+										<CheckCircle2 className="h-4 w-4 text-emerald-600" />
+										<span className="text-xs font-bold text-slate-800">
+											File uploaded
+										</span>
 									</div>
 									{!isViewOnly && (
-										<button type="button" onClick={() => removeFile("registration_certificate_url")} className="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-												<path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-											</svg>
+										<button
+											type="button"
+											onClick={() => removeFile("registration_certificate_url")}
+											className="text-rose-500 hover:text-rose-600 transition p-1"
+										>
+											<Trash2 className="h-4 w-4" />
 										</button>
 									)}
 								</div>
 							) : (
 								!isViewOnly && (
-									<label className="flex cursor-pointer items-center gap-4 rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 p-4 transition-colors hover:border-indigo-500 hover:bg-indigo-50 dark:border-zinc-700 dark:bg-zinc-800">
-										<input type="file" accept="image/jpeg,image/jpg,image/png,application/pdf" onChange={(e) => handleFileUpload(e, "registration_certificate_url")} className="hidden" disabled={uploadingFile === "registration_certificate_url"} />
+									<label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center cursor-pointer transition hover:border-orange-500 hover:bg-orange-50/20">
+										<input
+											type="file"
+											accept="application/pdf,image/jpeg,image/png"
+											onChange={(e) => handleFileUpload(e, "registration_certificate_url")}
+											className="hidden"
+											disabled={uploadingFile === "registration_certificate_url"}
+										/>
 										{uploadingFile === "registration_certificate_url" ? (
-											<svg className="h-8 w-8 animate-spin text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-											</svg>
+											<Loader2 className="h-6 w-6 animate-spin text-orange-600" />
 										) : (
-											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-zinc-400">
-												<path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-											</svg>
+											<>
+												<Upload className="h-5 w-5 text-slate-400 mb-1.5" />
+												<p className="text-xs font-bold text-slate-800">
+													Click to upload
+												</p>
+												<p className="text-[11px] text-slate-500 mt-0.5">
+													PDF, JPEG, or PNG (max 5MB)
+												</p>
+											</>
 										)}
-										<div className="flex-1">
-											<p className="text-sm font-medium text-zinc-900 dark:text-white">Click to upload</p>
-											<p className="text-xs text-zinc-500">PDF, JPEG, or PNG (max 5MB)</p>
-										</div>
 									</label>
 								)
 							)}
 						</div>
 
-						{/* Similar structure for other documents - Affiliation Certificate */}
+						{/* Document 2: Board Affiliation Certificate */}
 						<div>
-							<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+							<label className="block text-xs font-bold text-slate-700 mb-1.5">
 								Board Affiliation Certificate
 							</label>
 							{formData.affiliation_certificate_url ? (
-								<div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
-									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-green-500">
-										<path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-									</svg>
-									<div className="flex-1">
-										<p className="text-sm font-medium text-zinc-900 dark:text-white">File uploaded</p>
+								<div className="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-200 p-3.5">
+									<div className="flex items-center gap-2.5">
+										<CheckCircle2 className="h-4 w-4 text-emerald-600" />
+										<span className="text-xs font-bold text-slate-800">
+											File uploaded
+										</span>
 									</div>
 									{!isViewOnly && (
-										<button type="button" onClick={() => removeFile("affiliation_certificate_url")} className="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-												<path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-											</svg>
+										<button
+											type="button"
+											onClick={() => removeFile("affiliation_certificate_url")}
+											className="text-rose-500 hover:text-rose-600 transition p-1"
+										>
+											<Trash2 className="h-4 w-4" />
 										</button>
 									)}
 								</div>
 							) : (
 								!isViewOnly && (
-									<label className="flex cursor-pointer items-center gap-4 rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 p-4 transition-colors hover:border-indigo-500 hover:bg-indigo-50 dark:border-zinc-700 dark:bg-zinc-800">
-										<input type="file" accept="image/jpeg,image/jpg,image/png,application/pdf" onChange={(e) => handleFileUpload(e, "affiliation_certificate_url")} className="hidden" disabled={uploadingFile === "affiliation_certificate_url"} />
+									<label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center cursor-pointer transition hover:border-orange-500 hover:bg-orange-50/20">
+										<input
+											type="file"
+											accept="application/pdf,image/jpeg,image/png"
+											onChange={(e) => handleFileUpload(e, "affiliation_certificate_url")}
+											className="hidden"
+											disabled={uploadingFile === "affiliation_certificate_url"}
+										/>
 										{uploadingFile === "affiliation_certificate_url" ? (
-											<svg className="h-8 w-8 animate-spin text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-											</svg>
+											<Loader2 className="h-6 w-6 animate-spin text-orange-600" />
 										) : (
-											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-zinc-400">
-												<path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-											</svg>
+											<>
+												<Upload className="h-5 w-5 text-slate-400 mb-1.5" />
+												<p className="text-xs font-bold text-slate-800">
+													Click to upload
+												</p>
+												<p className="text-[11px] text-slate-500 mt-0.5">
+													PDF, JPEG, or PNG (max 5MB)
+												</p>
+											</>
 										)}
-										<div className="flex-1">
-											<p className="text-sm font-medium text-zinc-900 dark:text-white">Click to upload</p>
-											<p className="text-xs text-zinc-500">PDF, JPEG, or PNG (max 5MB)</p>
-										</div>
 									</label>
 								)
 							)}
 						</div>
 
-						{/* Principal's ID Proof */}
+						{/* Document 3: Principal's ID Proof */}
 						<div>
-							<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+							<label className="block text-xs font-bold text-slate-700 mb-1.5">
 								Principal's ID Proof
 							</label>
 							{formData.principal_id_proof_url ? (
-								<div className="flex items-center gap-3 rounded-lg border border-zinc-200 bg-zinc-50 p-4 dark:border-zinc-700 dark:bg-zinc-800">
-									<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-green-500">
-										<path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
-									</svg>
-									<div className="flex-1">
-										<p className="text-sm font-medium text-zinc-900 dark:text-white">File uploaded</p>
+								<div className="flex items-center justify-between rounded-xl bg-slate-50 border border-slate-200 p-3.5">
+									<div className="flex items-center gap-2.5">
+										<CheckCircle2 className="h-4 w-4 text-emerald-600" />
+										<span className="text-xs font-bold text-slate-800">
+											File uploaded
+										</span>
 									</div>
 									{!isViewOnly && (
-										<button type="button" onClick={() => removeFile("principal_id_proof_url")} className="rounded-lg p-2 text-red-500 hover:bg-red-50 dark:hover:bg-red-900/20">
-											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-5 w-5">
-												<path strokeLinecap="round" strokeLinejoin="round" d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0" />
-											</svg>
+										<button
+											type="button"
+											onClick={() => removeFile("principal_id_proof_url")}
+											className="text-rose-500 hover:text-rose-600 transition p-1"
+										>
+											<Trash2 className="h-4 w-4" />
 										</button>
 									)}
 								</div>
 							) : (
 								!isViewOnly && (
-									<label className="flex cursor-pointer items-center gap-4 rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 p-4 transition-colors hover:border-indigo-500 hover:bg-indigo-50 dark:border-zinc-700 dark:bg-zinc-800">
-										<input type="file" accept="image/jpeg,image/jpg,image/png,application/pdf" onChange={(e) => handleFileUpload(e, "principal_id_proof_url")} className="hidden" disabled={uploadingFile === "principal_id_proof_url"} />
+									<label className="flex flex-col items-center justify-center rounded-xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center cursor-pointer transition hover:border-orange-500 hover:bg-orange-50/20">
+										<input
+											type="file"
+											accept="application/pdf,image/jpeg,image/png"
+											onChange={(e) => handleFileUpload(e, "principal_id_proof_url")}
+											className="hidden"
+											disabled={uploadingFile === "principal_id_proof_url"}
+										/>
 										{uploadingFile === "principal_id_proof_url" ? (
-											<svg className="h-8 w-8 animate-spin text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-												<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-												<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-											</svg>
+											<Loader2 className="h-6 w-6 animate-spin text-orange-600" />
 										) : (
-											<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-8 w-8 text-zinc-400">
-												<path strokeLinecap="round" strokeLinejoin="round" d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m6.75 12l-3-3m0 0l-3 3m3-3v6m-1.5-15H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z" />
-											</svg>
+											<>
+												<Upload className="h-5 w-5 text-slate-400 mb-1.5" />
+												<p className="text-xs font-bold text-slate-800">
+													Click to upload
+												</p>
+												<p className="text-[11px] text-slate-500 mt-0.5">
+													PDF, JPEG, or PNG (max 5MB)
+												</p>
+											</>
 										)}
-										<div className="flex-1">
-											<p className="text-sm font-medium text-zinc-900 dark:text-white">Click to upload</p>
-											<p className="text-xs text-zinc-500">PDF, JPEG, or PNG (max 5MB)</p>
-										</div>
 									</label>
 								)
 							)}
 						</div>
 					</div>
-				</div>
 
-				{/* Action Buttons */}
-				<div className="flex gap-4">
-					<button
-						type="submit"
-						disabled={saving}
-						className="flex-1 rounded-lg bg-indigo-500 px-6 py-3 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-50 disabled:hover:translate-y-0"
-					>
-						{saving ? "Saving changes..." : "Save Changes"}
-					</button>
-					<Link
-						href="/dashboard/settings"
-						className="rounded-lg border border-zinc-300 px-6 py-3 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-					>
-						Cancel
-					</Link>
-				</div>
-			</form>
+					{/* ── 5. Bottom Action Bar ── */}
+					{!isViewOnly && (
+						<div className="flex items-center gap-3 pt-2">
+							<button
+								type="submit"
+								disabled={saving}
+								className="dashboard-btn-primary flex-1 rounded-xl py-3 text-xs font-bold shadow-sm disabled:opacity-50"
+							>
+								{saving ? "Saving Changes..." : "Save Changes"}
+							</button>
+							<Link
+								href="/dashboard/settings"
+								className="rounded-xl border border-slate-200 bg-white px-6 py-3 text-xs font-bold text-slate-600 transition hover:bg-slate-50"
+							>
+								Cancel
+							</Link>
+						</div>
+					)}
+				</form>
+			</div>
 		</div>
 	);
 }

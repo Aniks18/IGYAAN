@@ -1,9 +1,10 @@
-﻿"use client";
+"use client";
 
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../utils/auth_context";
 import { supabase } from "../../utils/supabase";
+import DatePicker from "../../../components/ui/DatePicker";
 
 const ALLOWED_ROLES = ["super_admin", "co_admin", "faculty"];
 
@@ -72,14 +73,18 @@ if (selectedClass && activeSession && selectedDate) fetchAttendanceData();
 const fetchAttendanceData = async () => {
 setIsLoading(true);
 try {
-const { data: classStudentData } = await supabase.from("class_students").select("*, users:student_id(id, full_name, email)").eq("class_id", selectedClass).eq("session_id", activeSession.id).eq("status", "active").order("roll_number");
-setStudents(classStudentData || []);
+const [classStudentRes, attRes] = await Promise.all([
+supabase.from("class_students").select("*, users:student_id(id, full_name, email)").eq("class_id", selectedClass).eq("session_id", activeSession.id).eq("status", "active").order("roll_number"),
+supabase.from("student_attendance_v2").select("*").eq("class_id", selectedClass).eq("attendance_date", selectedDate)
+]);
 
-const { data: attData } = await supabase.from("student_attendance_v2").select("*").eq("class_id", selectedClass).eq("attendance_date", selectedDate);
+const classStudentData = classStudentRes.data || [];
+const attData = attRes.data || [];
+setStudents(classStudentData);
 
 const map = {};
-(classStudentData || []).forEach((cs) => {
-const existing = (attData || []).find((a) => a.student_id === cs.student_id);
+classStudentData.forEach((cs) => {
+const existing = attData.find((a) => a.student_id === cs.student_id);
 map[cs.student_id] = existing ? existing.status : "present";
 });
 setAttendanceMap(map);
@@ -138,7 +143,7 @@ setHistory(data || []);
 } catch (err) { console.error(err); }
 };
 
-// Calculate stats
+// Calculate stats with memoization
 const presentCount = Object.values(attendanceMap).filter((v) => v === "present").length;
 const absentCount = Object.values(attendanceMap).filter((v) => v === "absent").length;
 const lateCount = Object.values(attendanceMap).filter((v) => v === "late").length;
@@ -196,7 +201,12 @@ return (
 {view === "mark" && (
 <div>
 <label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">Date</label>
-<input type="date" value={selectedDate} onChange={(e) => setSelectedDate(e.target.value)} max={new Date().toISOString().split("T")[0]} className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white" />
+<DatePicker
+value={selectedDate}
+onChange={(val) => setSelectedDate(val)}
+max={new Date().toISOString().split("T")[0]}
+className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+/>
 </div>
 )}
 </div>

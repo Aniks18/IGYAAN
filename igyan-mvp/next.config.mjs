@@ -35,7 +35,7 @@ const nextConfig = {
 		],
 	},
 	experimental: {
-		optimizePackageImports: ["lucide-react", "framer-motion", "chart.js"],
+		optimizePackageImports: ["lucide-react", "framer-motion", "chart.js", "xlsx", "jspdf", "jspdf-autotable", "react-pdf", "openai"],
 	},
 	turbopack: {
 		root: __dirname,

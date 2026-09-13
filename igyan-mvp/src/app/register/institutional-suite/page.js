@@ -233,6 +233,9 @@ export default function InstitutionalSuiteRegister() {
 							) : (
 								<label className="register-upload-control flex h-24 w-24 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-zinc-300 bg-zinc-50 transition-colors hover:border-sky-500 hover:bg-sky-50">
 									<input
+										id="institutional-avatar"
+										name="avatar"
+										aria-label="Upload profile picture"
 										type="file"
 										accept="image/jpeg,image/jpg,image/png"
 										onChange={handleImageUpload}
@@ -365,6 +368,9 @@ export default function InstitutionalSuiteRegister() {
 							<div className="mt-3 space-y-2">
 								<div className="flex gap-2">
 									<input
+										id="otp-code"
+										name="otp"
+										aria-label="6-digit OTP code"
 										type="text"
 										placeholder="Enter 6-digit OTP"
 										value={otpCode}

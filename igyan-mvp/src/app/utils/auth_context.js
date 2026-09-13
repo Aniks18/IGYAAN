@@ -60,14 +60,16 @@ function getDeviceInfo() {
 	};
 }
 
-// Get user's IP address (simplified - in production use a proper service)
+// Get user's IP address (simplified - with fast fallback)
 async function getUserIP() {
 	try {
-		const response = await fetch("https://api.ipify.org?format=json");
+		const controller = new AbortController();
+		const timeoutId = setTimeout(() => controller.abort(), 1200);
+		const response = await fetch("https://api.ipify.org?format=json", { signal: controller.signal });
+		clearTimeout(timeoutId);
 		const data = await response.json();
-		return data.ip;
+		return data.ip || "0.0.0.0";
 	} catch (error) {
-		console.error("Failed to get IP:", error);
 		return "0.0.0.0";
 	}
 }
@@ -80,14 +82,25 @@ export function AuthProvider({ children }) {
 
 	// Check for existing session on mount
 	useEffect(() => {
+		try {
+			const cached = localStorage.getItem("cached_user");
+			const token = localStorage.getItem("session_token");
+			if (token && cached) {
+				setUser(JSON.parse(cached));
+				setLoading(false);
+			}
+		} catch (e) {}
+
 		checkSession();
 	}, []);
 
 	const checkSession = async () => {
-		setLoading(true);
 		try {
 			const sessionToken = localStorage.getItem("session_token");
 			if (!sessionToken) {
+				setUser(null);
+				setSession(null);
+				localStorage.removeItem("cached_user");
 				setLoading(false);
 				return;
 			}
@@ -101,9 +114,9 @@ export function AuthProvider({ children }) {
 				.single();
 
 			// Only remove the token when Supabase confirms that no matching session exists.
-			// Network or transient database errors must not log a user out on refresh.
 			if (error?.code === "PGRST116" || (!error && !sessionData)) {
 				localStorage.removeItem("session_token");
+				localStorage.removeItem("cached_user");
 				setUser(null);
 				setSession(null);
 				setLoading(false);
@@ -112,6 +125,7 @@ export function AuthProvider({ children }) {
 
 			if (error) {
 				console.error("Session verification temporarily failed:", error);
+				setLoading(false);
 				return;
 			}
 
@@ -121,14 +135,18 @@ export function AuthProvider({ children }) {
 				return;
 			}
 
-			// Update last activity
-			await supabase
+			// Update last activity in background without blocking state release
+			supabase
 				.from("sessions")
 				.update({ last_activity_at: new Date().toISOString() })
-				.eq("id", sessionData.id);
+				.eq("id", sessionData.id)
+				.then(() => {})
+				.catch(() => {});
 
-			console.log("User session loaded - User ID:", sessionData.users?.id, "School ID:", sessionData.users?.school_id, "Role:", sessionData.users?.role);
-			setUser(sessionData.users);
+			if (sessionData.users) {
+				localStorage.setItem("cached_user", JSON.stringify(sessionData.users));
+				setUser(sessionData.users);
+			}
 			setSession(sessionData);
 		} catch (error) {
 			console.error("Session check error:", error);
@@ -150,8 +168,8 @@ export function AuthProvider({ children }) {
 						full_name: fullName,
 						phone,
 						image_base64: imageBase64,
-						role: role, // Role assigned based on registration portal
-						school_id: null, // Will be set after school onboarding (for institutional users)
+						role: role,
+						school_id: null,
 					},
 				])
 				.select()
@@ -161,7 +179,6 @@ export function AuthProvider({ children }) {
 				throw userError;
 			}
 
-			// Auto-login after registration (no variant check needed for register)
 			await login(email, password);
 
 			return { success: true, data: userData };
@@ -175,7 +192,6 @@ export function AuthProvider({ children }) {
 		try {
 			const passwordHash = await hashPassword(password);
 
-			// Look up the account first so the form can identify a password mismatch.
 			const { data: userData, error: userError } = await supabase
 				.from("users")
 				.select("*")
@@ -190,11 +206,9 @@ export function AuthProvider({ children }) {
 				return { success: false, error: "Incorrect password", field: "password" };
 			}
 
-			// Define allowed roles based on login variant
 			const INSTITUTIONAL_ROLES = ['super_admin', 'co_admin', 'principal', 'faculty', 'teacher'];
 			const LAUNCH_PAD_ROLES = ['student', 'parent'];
 
-			// Validate role based on login variant
 			if (loginVariant === "institutionalSuite") {
 				if (!INSTITUTIONAL_ROLES.includes(userData.role)) {
 					throw new Error("Access denied. This portal is for super admins, principals, and teachers. Students and parents should use Launch Pad.");
@@ -211,7 +225,7 @@ export function AuthProvider({ children }) {
 			const sessionToken = generateToken();
 			const refreshToken = generateToken();
 			const expiresAt = new Date();
-			expiresAt.setDate(expiresAt.getDate() + 7); // 7 days expiration
+			expiresAt.setDate(expiresAt.getDate() + 7);
 
 			const { data: sessionData, error: sessionError } = await supabase
 				.from("sessions")
@@ -236,10 +250,9 @@ export function AuthProvider({ children }) {
 				throw sessionError;
 			}
 
-			// Store session token in localStorage
 			localStorage.setItem("session_token", sessionToken);
+			localStorage.setItem("cached_user", JSON.stringify(userData));
 
-			console.log("Login successful - User ID:", userData.id, "School ID:", userData.school_id, "Role:", userData.role);
 			setUser(userData);
 			setSession(sessionData);
 
@@ -255,7 +268,6 @@ export function AuthProvider({ children }) {
 		try {
 			const sessionToken = localStorage.getItem("session_token");
 			if (sessionToken) {
-				// Mark session as inactive
 				await supabase
 					.from("sessions")
 					.update({
@@ -266,6 +278,7 @@ export function AuthProvider({ children }) {
 			}
 
 			localStorage.removeItem("session_token");
+			localStorage.removeItem("cached_user");
 			setUser(null);
 			setSession(null);
 			router.push("/login");

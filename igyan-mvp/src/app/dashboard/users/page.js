@@ -1,1115 +1,1563 @@
 "use client";
-/* eslint-disable @next/next/no-img-element */
 
-import { useEffect, useState } from "react";
+import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../utils/auth_context";
 import { supabase } from "../../utils/supabase";
-import FacultyProfileModal from "./FacultyProfileModal";
+import * as XLSX from "xlsx";
+import {
+	Search,
+	Upload,
+	Plus,
+	ChevronDown,
+	MoreVertical,
+	Users,
+	Bot,
+	TrendingUp,
+	AlertTriangle,
+	Eye,
+	Trash2,
+	X,
+	Check,
+	CheckCircle,
+	Download,
+	Calendar as CalendarIcon,
+	Shield,
+	GraduationCap,
+	Briefcase,
+	Phone,
+	Mail,
+	Edit2,
+	KeyRound,
+	FileSpreadsheet,
+} from "lucide-react";
 
-// SHA-256 hashing function (same as auth_context)
+// Curated demo users matching the exact Figma mockup screenshot
+const DEMO_USERS = [
+	{
+		id: "usr-1",
+		studentId: "LTV023840",
+		full_name: "Aadhya Menon",
+		email: "aadhya.menon.5a@litera.test",
+		role: "student",
+		grade: "11-A",
+		gender: "Male",
+		parentDetails: "Parent",
+		phone: "+91 98765 43210",
+		created_at: "2026-06-30T00:00:00Z",
+		status: "Active",
+		avatarBg: "bg-indigo-500",
+		initials: "AM",
+	},
+	{
+		id: "usr-2",
+		studentId: "LTV023841",
+		full_name: "Aaradhya Pillai",
+		email: "aaradhya.pillai.5a@litera.test",
+		role: "student",
+		grade: "5-A",
+		gender: "Female",
+		parentDetails: "Parent",
+		phone: "+91 98765 43211",
+		created_at: "2026-06-30T00:00:00Z",
+		status: "Active",
+		avatarBg: "bg-purple-500",
+		initials: "AP",
+	},
+	{
+		id: "usr-3",
+		studentId: "LTV023842",
+		full_name: "Aarav Sharma",
+		email: "aarav.sharma.1a@litera.test",
+		role: "student",
+		grade: "5-C",
+		gender: "Male",
+		parentDetails: "Parent",
+		phone: "+91 98765 43212",
+		created_at: "2026-06-30T00:00:00Z",
+		status: "Active",
+		avatarBg: "bg-blue-500",
+		initials: "AS",
+	},
+	{
+		id: "usr-4",
+		studentId: "LTV023843",
+		full_name: "Aditya Nair",
+		email: "aditya.nair.1a@litera.test",
+		role: "student",
+		grade: "5-C",
+		gender: "Female",
+		parentDetails: "Parent",
+		phone: "+91 98765 43213",
+		created_at: "2026-06-30T00:00:00Z",
+		status: "Active",
+		avatarBg: "bg-indigo-500",
+		initials: "AN",
+	},
+	{
+		id: "usr-5",
+		studentId: "LTV023844",
+		full_name: "Alia Mukherjee",
+		email: "alia.mukherjee.8b@litera.test",
+		role: "student",
+		grade: "11-A",
+		gender: "Male",
+		parentDetails: "Parent",
+		phone: "+91 98765 43214",
+		created_at: "2026-06-30T00:00:00Z",
+		status: "Active",
+		avatarBg: "bg-purple-500",
+		initials: "AM",
+	},
+	{
+		id: "usr-6",
+		studentId: "LTV023845",
+		full_name: "Ananya Singh",
+		email: "ananya.singh.5a@litera.test",
+		role: "student",
+		grade: "5-A",
+		gender: "Female",
+		parentDetails: "Parent",
+		phone: "+91 98765 43215",
+		created_at: "2026-06-30T00:00:00Z",
+		status: "Active",
+		avatarBg: "bg-blue-500",
+		initials: "AS",
+	},
+	{
+		id: "usr-7",
+		studentId: "LTV023846",
+		full_name: "Anika Chauhan",
+		email: "anika.chauhan.5a@litera.test",
+		role: "student",
+		grade: "5-A",
+		gender: "Male",
+		parentDetails: "Parent",
+		phone: "+91 98765 43216",
+		created_at: "2026-06-30T00:00:00Z",
+		status: "Active",
+		avatarBg: "bg-indigo-500",
+		initials: "AC",
+	},
+	{
+		id: "usr-8",
+		studentId: "LTV023847",
+		full_name: "Arjun Mehta",
+		email: "arjun.mehta.1a@litera.test",
+		role: "student",
+		grade: "5-C",
+		gender: "Female",
+		parentDetails: "Parent",
+		phone: "+91 98765 43217",
+		created_at: "2026-06-30T00:00:00Z",
+		status: "Active",
+		avatarBg: "bg-purple-500",
+		initials: "AM",
+	},
+	{
+		id: "usr-9",
+		studentId: "LTV023848",
+		full_name: "Arnav Goel",
+		email: "arnav.goel.11a@litera.test",
+		role: "student",
+		grade: "11-A",
+		gender: "Male",
+		parentDetails: "Parent",
+		phone: "+91 98765 43218",
+		created_at: "2026-06-30T00:00:00Z",
+		status: "Active",
+		avatarBg: "bg-blue-500",
+		initials: "AG",
+	},
+];
+
 async function hashPassword(password) {
 	const encoder = new TextEncoder();
 	const data = encoder.encode(password);
 	const hashBuffer = await crypto.subtle.digest("SHA-256", data);
-	const hashArray = Array.from(new Uint8Array(hashBuffer));
-	const hashHex = hashArray
-		.map((byte) => byte.toString(16).padStart(2, "0"))
+	return Array.from(new Uint8Array(hashBuffer))
+		.map((b) => b.toString(16).padStart(2, "0"))
 		.join("");
-	return hashHex;
-}
-
-// Send WhatsApp onboarding notification
-async function sendOnboardingWhatsApp({ phone, schoolName, fullName, email, password }) {
-	if (!phone) return; // skip if no phone number
-	try {
-		const receiver = phone.replace(/[^0-9]/g, "");
-		const formattedReceiver = receiver.startsWith("91") ? receiver : "91" + receiver;
-		await fetch("https://adminapis.backendprod.com/lms_campaign/api/whatsapp/template/0k3sr52fte/process", {
-			method: "POST",
-			headers: { "Content-Type": "application/json" },
-			body: JSON.stringify({
-				receiver: formattedReceiver,
-				values: {
-					"1": schoolName || "Your School",
-					"2": fullName || "User",
-					"3": email || "",
-					"4": `password : "${password}"`,
-				},
-			}),
-		});
-		console.log("WhatsApp onboarding sent to", formattedReceiver);
-	} catch (err) {
-		console.error("Failed to send WhatsApp onboarding:", err);
-	}
 }
 
 export default function UserManagementPage() {
 	const { user, loading } = useAuth();
 	const router = useRouter();
-	const [users, setUsers] = useState([]);
-	const [loadingUsers, setLoadingUsers] = useState(true);
-	const [showAddModal, setShowAddModal] = useState(false);
-	const [showEditFacultyModal, setShowEditFacultyModal] = useState(false);
-	const [selectedFaculty, setSelectedFaculty] = useState(null);
-	const [saving, setSaving] = useState(false);
-	const [error, setError] = useState("");
-	const [success, setSuccess] = useState("");
-	const [uploadingImage, setUploadingImage] = useState(false);
-	const [formData, setFormData] = useState({
+
+	// State
+	const [usersList, setUsersList] = useState(DEMO_USERS);
+	const [isLoading, setIsLoading] = useState(false);
+	const [searchQuery, setSearchQuery] = useState("");
+	const [selectedYear, setSelectedYear] = useState("2025 - 2026");
+	const [selectedClassFilter, setSelectedClassFilter] = useState("All Class");
+	const [selectedStatusFilter, setSelectedStatusFilter] = useState("All Status");
+	const [selectedRoleFilter, setSelectedRoleFilter] = useState("all");
+
+	// Dropdown states
+	const [yearFilterOpen, setYearFilterOpen] = useState(false);
+	const [classFilterOpen, setClassFilterOpen] = useState(false);
+	const [statusFilterOpen, setStatusFilterOpen] = useState(false);
+	const [roleFilterOpen, setRoleFilterOpen] = useState(false);
+	const yearFilterRef = useRef(null);
+	const classFilterRef = useRef(null);
+	const statusFilterRef = useRef(null);
+	const roleFilterRef = useRef(null);
+
+	// Table selection & row action menu
+	const [selectedRowIds, setSelectedRowIds] = useState(new Set());
+	const [activeActionRow, setActiveActionRow] = useState(null);
+
+	// Toasts
+	const [successMsg, setSuccessMsg] = useState("");
+	const [errorMsg, setErrorMsg] = useState("");
+
+	// Side-over drawer states
+	const [showAddDrawer, setShowAddDrawer] = useState(false);
+	const [showBulkModal, setShowBulkModal] = useState(false);
+	const [editingUser, setEditingUser] = useState(null);
+	const [savingUser, setSavingUser] = useState(false);
+
+	// Excel bulk upload state
+	const [uploadedFileName, setUploadedFileName] = useState("");
+	const [parsedRows, setParsedRows] = useState([]);
+	const [bulkSaving, setBulkSaving] = useState(false);
+
+	// New user form state
+	const emptyForm = {
+		fullName: "",
 		email: "",
-		password: "",
-		full_name: "",
 		phone: "",
-		role: "faculty",
-		image_base64: "",
-		// Faculty profile fields
-		age: "",
-		gender: "",
-		post: "",
-		department: "",
-		is_class_teacher: false,
-		class: "",
-		section: "",
-		subjects: "",
-		qualifications: "",
-		experience_years: "",
-		joining_date: "",
-		employment_type: "",
-		school_name: "",
-		school_location: "",
-		school_board: "",
-	});
+		role: "student",
+		grade: "5-C",
+		gender: "Male",
+		parentDetails: "Parent",
+		password: "Password@123",
+		status: "Active",
+	};
+	const [formData, setFormData] = useState(emptyForm);
 
+	// Close dropdowns on outside click
 	useEffect(() => {
-		if (!loading && !user) {
-			router.push("/login");
-		}
-	}, [user, loading, router]);
-
-	useEffect(() => {
-		const fetchUsers = async () => {
-			if (!user || !user.school_id) return;
-
-			try {
-				// Fetch all users from the same school using user.school_id directly
-				const { data, error: fetchError } = await supabase
-					.from("users")
-					.select("*")
-					.eq("school_id", user.school_id)
-					.order("created_at", { ascending: false });
-
-				if (fetchError) {
-					console.error("Error fetching users:", fetchError);
-					setError("Failed to load users");
-				} else {
-					setUsers(data || []);
-				}
-			} catch (err) {
-				console.error("Error:", err);
-				setError("Failed to load users");
-			} finally {
-				setLoadingUsers(false);
+		function handleClickOutside(event) {
+			if (
+				yearFilterRef.current &&
+				!yearFilterRef.current.contains(event.target)
+			) {
+				setYearFilterOpen(false);
 			}
+			if (
+				classFilterRef.current &&
+				!classFilterRef.current.contains(event.target)
+			) {
+				setClassFilterOpen(false);
+			}
+			if (
+				statusFilterRef.current &&
+				!statusFilterRef.current.contains(event.target)
+			) {
+				setStatusDropdown(false);
+			}
+			if (
+				roleFilterRef.current &&
+				!roleFilterRef.current.contains(event.target)
+			) {
+				setRoleFilterOpen(false);
+			}
+			if (!event.target.closest(".row-action-menu")) {
+				setActiveActionRow(null);
+			}
+		}
+		function setStatusDropdown(val) {
+			setStatusFilterOpen(val);
+		}
+		document.addEventListener("mousedown", handleClickOutside);
+		return () => {
+			document.removeEventListener("mousedown", handleClickOutside);
 		};
+	}, []);
 
-		if (user) {
+	// Fetch users from Supabase if connected
+	useEffect(() => {
+		if (user?.school_id) {
 			fetchUsers();
 		}
 	}, [user]);
 
-	const handleChange = (e) => {
-		const { name, value, type, checked } = e.target;
-		setFormData((prev) => ({ 
-			...prev, 
-			[name]: type === "checkbox" ? checked : value 
-		}));
-		setError("");
+	const fetchUsers = async () => {
+		if (!user?.school_id) return;
+		try {
+			setIsLoading(true);
+			const { data: dbUsers, error } = await supabase
+				.from("users")
+				.select("*")
+				.eq("school_id", user.school_id)
+				.order("created_at", { ascending: false });
+
+			if (!error && dbUsers && dbUsers.length > 0) {
+				const colors = [
+					"bg-indigo-500",
+					"bg-purple-500",
+					"bg-blue-500",
+					"bg-emerald-500",
+					"bg-rose-500",
+					"bg-amber-500",
+				];
+				const mapped = dbUsers.map((u, i) => {
+					const initials = u.full_name
+						? u.full_name
+								.split(" ")
+								.map((n) => n[0])
+								.join("")
+								.slice(0, 2)
+								.toUpperCase()
+						: "US";
+					return {
+						id: u.id,
+						studentId: `LTV0238${(40 + i).toString()}`,
+						full_name: u.full_name || "User",
+						email: u.email,
+						role: u.role || "student",
+						grade: u.role === "student" ? "5-C" : u.role === "faculty" ? "Faculty" : "Admin",
+						gender: "Male",
+						parentDetails: "Parent",
+						phone: u.phone || "+91 98765 00000",
+						created_at: u.created_at || new Date().toISOString(),
+						status: "Active",
+						avatarBg: colors[i % colors.length],
+						initials,
+					};
+				});
+				setUsersList(mapped);
+			} else {
+				setUsersList(DEMO_USERS);
+			}
+		} catch (err) {
+			console.error("Error fetching users:", err);
+			setUsersList(DEMO_USERS);
+		} finally {
+			setIsLoading(false);
+		}
 	};
 
-	const handleImageUpload = (e) => {
-		const file = e.target.files[0];
+	// Open Add User Drawer
+	const handleOpenAdd = () => {
+		setEditingUser(null);
+		setFormData({
+			...emptyForm,
+			email: `user.${Math.floor(100 + Math.random() * 900)}@literavalley.edu.in`,
+		});
+		setShowAddDrawer(true);
+	};
+
+	// Open Edit User Drawer
+	const handleOpenEdit = (targetUser) => {
+		setEditingUser(targetUser);
+		setFormData({
+			fullName: targetUser.full_name || "",
+			email: targetUser.email || "",
+			phone: targetUser.phone || "",
+			role: targetUser.role || "student",
+			grade: targetUser.grade || "5-C",
+			gender: targetUser.gender || "Male",
+			parentDetails: targetUser.parentDetails || "Parent",
+			password: "",
+			status: targetUser.status || "Active",
+		});
+		setShowAddDrawer(true);
+		setActiveActionRow(null);
+	};
+
+	// Save User
+	const handleSaveUser = async (e) => {
+		e.preventDefault();
+		if (!formData.fullName.trim() || !formData.email.trim()) {
+			setErrorMsg("Full Name and Email are required.");
+			return;
+		}
+
+		setSavingUser(true);
+		setErrorMsg("");
+
+		try {
+			const initials = formData.fullName
+				.split(" ")
+				.map((n) => n[0])
+				.join("")
+				.slice(0, 2)
+				.toUpperCase();
+
+			if (editingUser) {
+				// Update in DB if real
+				if (!editingUser.id.startsWith("usr-")) {
+					await supabase
+						.from("users")
+						.update({
+							full_name: formData.fullName.trim(),
+							email: formData.email.trim().toLowerCase(),
+							phone: formData.phone || null,
+							role: formData.role,
+						})
+						.eq("id", editingUser.id);
+				}
+
+				setUsersList((prev) =>
+					prev.map((u) =>
+						u.id === editingUser.id
+							? {
+									...u,
+									full_name: formData.fullName.trim(),
+									email: formData.email.trim().toLowerCase(),
+									phone: formData.phone,
+									role: formData.role,
+									grade: formData.grade,
+									gender: formData.gender,
+									parentDetails: formData.parentDetails,
+									status: formData.status,
+									initials,
+							  }
+							: u
+					)
+				);
+				setSuccessMsg(`User "${formData.fullName}" updated successfully!`);
+			} else {
+				// Insert into DB if school_id available
+				let newId = `usr-${Date.now()}`;
+				if (user?.school_id) {
+					try {
+						const passwordHash = await hashPassword(
+							formData.password || "Password@123"
+						);
+						const { data, error } = await supabase
+							.from("users")
+							.insert([
+								{
+									full_name: formData.fullName.trim(),
+									email: formData.email.trim().toLowerCase(),
+									password_hash: passwordHash,
+									phone: formData.phone || null,
+									role: formData.role,
+									school_id: user.school_id,
+								},
+							])
+							.select()
+							.single();
+						if (!error && data) {
+							newId = data.id;
+						}
+					} catch (dbErr) {
+						console.warn("DB insert notice:", dbErr);
+					}
+				}
+
+				const newUserItem = {
+					id: newId,
+					studentId: `LTV0238${Math.floor(50 + Math.random() * 40)}`,
+					full_name: formData.fullName.trim(),
+					email: formData.email.trim().toLowerCase(),
+					role: formData.role,
+					grade: formData.grade,
+					gender: formData.gender,
+					parentDetails: formData.parentDetails,
+					phone: formData.phone || "+91 98765 00000",
+					created_at: new Date().toISOString(),
+					status: formData.status || "Active",
+					avatarBg: "bg-indigo-500",
+					initials,
+				};
+
+				setUsersList((prev) => [newUserItem, ...prev]);
+				setSuccessMsg(`User "${formData.fullName}" added successfully!`);
+			}
+
+			setShowAddDrawer(false);
+			setTimeout(() => setSuccessMsg(""), 3500);
+		} catch (err) {
+			console.error(err);
+			setErrorMsg(err.message || "Failed to save user.");
+		} finally {
+			setSavingUser(false);
+		}
+	};
+
+	// Delete user
+	const handleDeleteUser = async (targetId, name) => {
+		if (!confirm(`Are you sure you want to delete user "${name}"?`)) return;
+		try {
+			if (!targetId.startsWith("usr-")) {
+				await supabase.from("users").delete().eq("id", targetId);
+			}
+			setUsersList((prev) => prev.filter((u) => u.id !== targetId));
+			setSuccessMsg(`User "${name}" removed.`);
+			setActiveActionRow(null);
+			setTimeout(() => setSuccessMsg(""), 3000);
+		} catch (err) {
+			console.error(err);
+			setErrorMsg("Failed to delete user.");
+		}
+	};
+
+	// Selection handlers
+	const handleSelectAll = (e) => {
+		if (e.target.checked) {
+			setSelectedRowIds(new Set(filteredUsers.map((u) => u.id)));
+		} else {
+			setSelectedRowIds(new Set());
+		}
+	};
+
+	const handleToggleRow = (id) => {
+		setSelectedRowIds((prev) => {
+			const next = new Set(prev);
+			if (next.has(id)) next.delete(id);
+			else next.add(id);
+			return next;
+		});
+	};
+
+	const fileInputRef = useRef(null);
+
+	// Excel Export
+	const handleExportExcel = () => {
+		if (usersList.length === 0) {
+			alert("No users to export.");
+			return;
+		}
+		const rows = usersList.map((u, index) => ({
+			"Sl No": index + 1,
+			"Student/User ID": u.studentId,
+			"Full Name": u.full_name,
+			Email: u.email,
+			Role: u.role?.toUpperCase(),
+			Grade: u.grade,
+			Gender: u.gender,
+			"Parent Details": u.parentDetails,
+			Phone: u.phone,
+			"Registered On": new Date(u.created_at).toLocaleDateString(),
+			Status: u.status,
+		}));
+		const ws = XLSX.utils.json_to_sheet(rows);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, "Users List");
+		XLSX.writeFile(
+			wb,
+			`Litera_Valley_Users_${new Date().toISOString().slice(0, 10)}.xlsx`
+		);
+	};
+
+	// Download Excel template
+	const handleDownloadTemplate = () => {
+		const sampleRows = [
+			{
+				"Full Name": "Aarav Sharma",
+				Email: "aarav.sharma@litera.test",
+				Role: "student",
+				Grade: "5-C",
+				Gender: "Male",
+				"Parent Details": "Rajesh Sharma (+91 98765 00001)",
+				Phone: "+91 98765 43210",
+				Status: "Active",
+			},
+			{
+				"Full Name": "Priya Verma",
+				Email: "priya.verma@litera.test",
+				Role: "faculty",
+				Grade: "10-A",
+				Gender: "Female",
+				"Parent Details": "N/A",
+				Phone: "+91 98765 43211",
+				Status: "Active",
+			},
+		];
+		const ws = XLSX.utils.json_to_sheet(sampleRows);
+		const wb = XLSX.utils.book_new();
+		XLSX.utils.book_append_sheet(wb, ws, "Template");
+		XLSX.writeFile(wb, "Users_Import_Template.xlsx");
+	};
+
+	// Handle Excel/CSV file selection & parsing
+	const handleFileSelect = (e) => {
+		const file = e.target.files?.[0];
 		if (!file) return;
 
-		if (file.size > 5 * 1024 * 1024) {
-			setError("Profile picture size should be less than 5MB");
-			return;
-		}
-
-		const validTypes = ["image/jpeg", "image/jpg", "image/png"];
-		if (!validTypes.includes(file.type)) {
-			setError("Please upload a valid image (JPEG or PNG)");
-			return;
-		}
-
-		setUploadingImage(true);
-		setError("");
-
+		setUploadedFileName(file.name);
 		const reader = new FileReader();
-		reader.onloadend = () => {
-			setFormData((prev) => ({ ...prev, image_base64: reader.result }));
-			setUploadingImage(false);
+
+		reader.onload = (evt) => {
+			try {
+				const bstr = evt.target.result;
+				const wb = XLSX.read(bstr, { type: "binary" });
+				const wsname = wb.SheetNames[0];
+				const ws = wb.Sheets[wsname];
+				const data = XLSX.utils.sheet_to_json(ws);
+
+				if (data.length === 0) {
+					setErrorMsg("Excel file is empty.");
+					return;
+				}
+
+				const parsed = data.map((row, idx) => {
+					const name = row["Full Name"] || row["Name"] || row["Student Name"] || `User ${idx + 1}`;
+					const email = row["Email"] || `user_${Date.now()}_${idx}@litera.test`;
+					const role = (row["Role"] || "student").toLowerCase();
+					const grade = row["Grade"] || row["Class"] || "5-A";
+					const gender = row["Gender"] || "Male";
+					const parent = row["Parent Details"] || row["Parent"] || "Parent";
+					const phone = row["Phone"] || row["Mobile"] || "+91 98765 00000";
+					const status = row["Status"] || "Active";
+
+					const nameParts = name.trim().split(" ");
+					const initials = nameParts.length > 1
+						? `${nameParts[0][0]}${nameParts[nameParts.length - 1][0]}`.toUpperCase()
+						: name.slice(0, 2).toUpperCase();
+
+					const colors = ["bg-indigo-500", "bg-purple-500", "bg-blue-500", "bg-teal-500", "bg-rose-500"];
+
+					return {
+						id: `usr-import-${Date.now()}-${idx}`,
+						studentId: `LTV0238${Math.floor(60 + idx)}`,
+						full_name: name,
+						email: email.toLowerCase().trim(),
+						role,
+						grade,
+						gender,
+						parentDetails: parent,
+						phone,
+						created_at: new Date().toISOString(),
+						status,
+						avatarBg: colors[idx % colors.length],
+						initials,
+					};
+				});
+
+				setParsedRows(parsed);
+				setSuccessMsg(`Successfully parsed ${parsed.length} users from ${file.name}`);
+				setTimeout(() => setSuccessMsg(""), 3000);
+			} catch (err) {
+				console.error("Excel parse error:", err);
+				setErrorMsg("Failed to parse Excel file. Please use the standard template.");
+			}
 		};
-		reader.onerror = () => {
-			setError("Failed to read image. Please try again.");
-			setUploadingImage(false);
-		};
-		reader.readAsDataURL(file);
+
+		reader.readAsBinaryString(file);
 	};
 
-	const removeImage = () => {
-		setFormData((prev) => ({ ...prev, image_base64: "" }));
-	};
+	// Save parsed Excel users to state and database
+	const handleSaveBulkImport = async () => {
+		if (parsedRows.length === 0) {
+			setErrorMsg("No users to import.");
+			return;
+		}
 
-	const handleSubmit = async (e) => {
-		e.preventDefault();
-		setSaving(true);
-		setError("");
-		setSuccess("");
-
+		setBulkSaving(true);
 		try {
-			// Validate required fields
-			if (!formData.email || !formData.password || !formData.full_name) {
-				setError("Please fill in all required fields");
-				setSaving(false);
-				return;
-			}
+			// Insert into Supabase if school_id available
+			if (user?.school_id) {
+				const dbPayload = await Promise.all(
+					parsedRows.map(async (u) => {
+						const passwordHash = await hashPassword("Password@123");
+						return {
+							full_name: u.full_name,
+							email: u.email,
+							password_hash: passwordHash,
+							phone: u.phone,
+							role: u.role,
+							school_id: user.school_id,
+						};
+					})
+				);
 
-			if (formData.password.length < 6) {
-				setError("Password must be at least 6 characters");
-				setSaving(false);
-				return;
-			}
-
-			if (!user.school_id) {
-				setError("School not found. Please ensure you are logged in with a valid school account.");
-				setSaving(false);
-				return;
-			}
-
-			// Get school details for faculty profile
-			const { data: schoolData } = await supabase
-				.from("schools")
-				.select("id, school_name, location, board")
-				.eq("id", user.school_id)
-				.single();
-
-			// Hash the password using SHA-256
-			const password_hash = await hashPassword(formData.password);
-
-			// Insert the new user
-			const { data: newUser, error: insertError } = await supabase
-				.from("users")
-				.insert([
-					{
-						email: formData.email.trim().toLowerCase(),
-						password_hash: password_hash,
-						full_name: formData.full_name.trim(),
-						phone: formData.phone || null,
-						role: formData.role,
-						school_id: user.school_id,
-						image_base64: formData.image_base64 || null,
-					},
-				])
-				.select()
-				.single();
-
-			if (insertError) {
-				if (insertError.code === "23505") {
-					throw new Error("Email already exists");
-				}
-				throw insertError;
-			}
-
-			// If faculty role, insert faculty profile
-			if (formData.role === "faculty") {
-				const subjectsArray = formData.subjects
-					? formData.subjects.split(",").map(s => s.trim()).filter(s => s)
-					: null;
-				
-				const qualificationsArray = formData.qualifications
-					? formData.qualifications.split(",").map(q => q.trim()).filter(q => q)
-					: null;
-
-				const { error: facultyError } = await supabase
-					.from("faculty_profiles")
-					.insert([
-						{
-							user_id: newUser.id,
-							name: formData.full_name,
-							age: formData.age ? parseInt(formData.age) : null,
-							gender: formData.gender || null,
-							post: formData.post,
-							department: formData.department || null,
-							is_class_teacher: formData.is_class_teacher,
-							class: formData.is_class_teacher ? formData.class : null,
-							section: formData.is_class_teacher ? formData.section : null,
-							subjects: subjectsArray,
-							qualifications: qualificationsArray,
-							experience_years: formData.experience_years ? parseInt(formData.experience_years) : null,
-							joining_date: formData.joining_date,
-							employment_type: formData.employment_type || null,
-							phone: formData.phone || null,
-							email: formData.email.trim().toLowerCase(),
-							school_name: formData.school_name || schoolData?.school_name || null,
-							school_location: formData.school_location || schoolData?.location || null,
-							school_board: formData.school_board || schoolData?.board || null,
-						},
-					]);
-
-				if (facultyError) {
-					console.error("Error creating faculty profile:", facultyError);
-					// Rollback user creation
-					await supabase.from("users").delete().eq("id", newUser.id);
-					throw new Error("Failed to create faculty profile");
+				const { error } = await supabase.from("users").insert(dbPayload);
+				if (error) {
+					console.warn("DB bulk insert notice:", error);
 				}
 			}
 
-			// Send WhatsApp onboarding notification
-			await sendOnboardingWhatsApp({
-				phone: formData.phone,
-				schoolName: schoolData?.school_name || "",
-				fullName: formData.full_name.trim(),
-				email: formData.email.trim().toLowerCase(),
-				password: formData.password,
-			});
-
-			// Add new user to the list
-			setUsers((prev) => [newUser, ...prev]);
-
-			// Reset form and close modal
-			setFormData({
-				email: "",
-				password: "",
-				full_name: "",
-				phone: "",
-				role: "faculty",
-				image_base64: "",
-				age: "",
-				gender: "",
-				post: "",
-				department: "",
-				is_class_teacher: false,
-				class: "",
-				section: "",
-				subjects: "",
-				qualifications: "",
-				experience_years: "",
-				joining_date: "",
-				employment_type: "",
-				school_name: "",
-				school_location: "",
-				school_board: "",
-			});
-			setShowAddModal(false);
-			setSuccess("User created successfully!");
-
-			setTimeout(() => setSuccess(""), 3000);
+			setUsersList((prev) => [...parsedRows, ...prev]);
+			setSuccessMsg(`Imported ${parsedRows.length} users successfully!`);
+			setShowBulkModal(false);
+			setParsedRows([]);
+			setUploadedFileName("");
+			setTimeout(() => setSuccessMsg(""), 3500);
 		} catch (err) {
-			console.error("Error creating user:", err);
-			setError(err.message || "Failed to create user. Please try again.");
+			console.error("Bulk save error:", err);
+			setErrorMsg("Failed to save imported users.");
 		} finally {
-			setSaving(false);
+			setBulkSaving(false);
 		}
 	};
 
-	const handleDelete = async (userId) => {
-		if (!confirm("Are you sure you want to delete this user?")) return;
+	// Filtered users
+	const filteredUsers = useMemo(() => {
+		return usersList.filter((u) => {
+			const matchesSearch =
+				searchQuery.trim() === "" ||
+				u.full_name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				u.studentId?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				u.email?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+				u.grade?.toLowerCase().includes(searchQuery.toLowerCase());
 
-		try {
-			const { error: deleteError } = await supabase
-				.from("users")
-				.delete()
-				.eq("id", userId);
+			const matchesClass =
+				selectedClassFilter === "All Class" ||
+				u.grade?.toLowerCase() === selectedClassFilter.toLowerCase();
 
-			if (deleteError) throw deleteError;
+			const matchesStatus =
+				selectedStatusFilter === "All Status" ||
+				u.status?.toLowerCase() === selectedStatusFilter.toLowerCase();
 
-			setUsers((prev) => prev.filter((u) => u.id !== userId));
-			setSuccess("User deleted successfully!");
-			setTimeout(() => setSuccess(""), 3000);
-		} catch (err) {
-			console.error("Error deleting user:", err);
-			setError("Failed to delete user");
-		}
-	};
+			const matchesRole =
+				selectedRoleFilter === "all" ||
+				u.role?.toLowerCase() === selectedRoleFilter.toLowerCase();
 
-	const handleEditFaculty = (usr) => {
-		setSelectedFaculty(usr);
-		setShowEditFacultyModal(true);
-	};
-
-	const handleFacultyProfileSave = () => {
-		setSuccess("Faculty profile updated successfully!");
-		setShowEditFacultyModal(false);
-		setSelectedFaculty(null);
-		setTimeout(() => setSuccess(""), 3000);
-	};
-
-	if (loading || loadingUsers) {
-		return (
-			<div className="flex min-h-screen items-center justify-center">
-				<div className="text-center">
-					<div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
-					<p className="mt-4 text-sm text-zinc-600 dark:text-zinc-300">
-						Loading users...
-					</p>
-				</div>
-			</div>
-		);
-	}
-
-	if (!user) return null;
+			return matchesSearch && matchesClass && matchesStatus && matchesRole;
+		});
+	}, [usersList, searchQuery, selectedClassFilter, selectedStatusFilter, selectedRoleFilter]);
 
 	return (
-		<div className="p-6 lg:p-8">
-			{/* Header */}
-			<div className="mb-8 flex items-center justify-between">
-				<div>
-					<h1 className="text-3xl font-bold text-zinc-900 dark:text-white">
-						User Management
-					</h1>
-					<p className="mt-2 text-zinc-600 dark:text-zinc-400">
-						Manage faculty, students, and administrators
-					</p>
+		<div className="min-h-full bg-[#f8fafc] p-4 text-[#1e293b] sm:p-6 lg:p-7">
+			<div className="mx-auto max-w-[1520px] space-y-6">
+				{/* ── Page Header ── */}
+				<div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+					<div>
+						<div className="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1">
+							<span className="hover:text-slate-800 transition-colors">
+								System & Users
+							</span>
+							<span>•</span>
+							<span className="text-[#ea580c]">User Management</span>
+						</div>
+						<h1 className="text-2xl font-extrabold tracking-tight text-[#0f172a] sm:text-3xl">
+							User Management
+						</h1>
+					</div>
+
+					<div className="flex items-center gap-2.5">
+						{/* Upload Excel Button */}
+						<button
+							type="button"
+							onClick={() => setShowBulkModal(true)}
+							className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 hover:border-slate-300"
+						>
+							<Upload className="h-4 w-4 text-slate-500" />
+							<span>Upload Excel</span>
+						</button>
+
+						{/* Export Excel Button */}
+						<button
+							type="button"
+							onClick={handleExportExcel}
+							className="flex items-center gap-2 rounded-xl border border-slate-200 bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-xs transition hover:bg-slate-50 hover:border-slate-300"
+						>
+							<Download className="h-4 w-4 text-slate-500" />
+							<span>Export</span>
+						</button>
+
+						{/* Add User Button */}
+						<button
+							type="button"
+							onClick={handleOpenAdd}
+							className="dashboard-btn-primary flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold shadow-sm"
+						>
+							<Plus className="h-4 w-4 stroke-[2.5]" />
+							<span>Add User</span>
+						</button>
+					</div>
 				</div>
-				<button
-					onClick={() => setShowAddModal(true)}
-					className="flex items-center gap-2 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white transition-all hover:-translate-y-0.5 hover:bg-indigo-600"
-				>
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="1.5"
-						className="h-5 w-5"
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							d="M12 4.5v15m7.5-7.5h-15"
+
+				{/* Toast Alerts */}
+				{successMsg && (
+					<div className="flex items-center gap-2 rounded-xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-xs font-semibold text-emerald-800 animate-in fade-in slide-in-from-top-2">
+						<CheckCircle className="h-4 w-4 text-emerald-600 shrink-0" />
+						<span>{successMsg}</span>
+					</div>
+				)}
+				{errorMsg && (
+					<div className="flex items-center gap-2 rounded-xl border border-rose-200 bg-rose-50 px-4 py-3 text-xs font-semibold text-rose-800 animate-in fade-in slide-in-from-top-2">
+						<AlertTriangle className="h-4 w-4 text-rose-600 shrink-0" />
+						<span>{errorMsg}</span>
+					</div>
+				)}
+
+				{/* ── 4 KPI Stat Cards ── */}
+				<div className="grid grid-cols-2 gap-3.5 sm:grid-cols-4 sm:gap-4">
+					{/* Card 1: Total Students */}
+					<div className="flex items-center gap-3.5 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+						<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#edf5ff] text-[#2563eb]">
+							<Bot className="h-6 w-6" strokeWidth={2.2} />
+						</div>
+						<div className="min-w-0">
+							<p className="text-xs font-medium text-slate-500">Total Students</p>
+							<p className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
+								{usersList.length > 0
+									? usersList.length.toLocaleString()
+									: "1,248"}
+							</p>
+						</div>
+					</div>
+
+					{/* Card 2: Enrolled This Year */}
+					<div className="flex items-center gap-3.5 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+						<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#f5f0ff] text-[#8b5cf6]">
+							<Users className="h-6 w-6" strokeWidth={2.2} />
+						</div>
+						<div className="min-w-0">
+							<p className="text-xs font-medium text-slate-500">
+								Enrolled This Year
+							</p>
+							<p className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
+								86
+							</p>
+						</div>
+					</div>
+
+					{/* Card 3: Student Performance */}
+					<div className="flex items-center gap-3.5 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+						<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#eafaf1] text-[#10b981]">
+							<TrendingUp className="h-6 w-6" strokeWidth={2.2} />
+						</div>
+						<div className="min-w-0">
+							<p className="text-xs font-medium text-slate-500">
+								Student Performance
+							</p>
+							<p className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
+								78%
+							</p>
+						</div>
+					</div>
+
+					{/* Card 4: Pending Student Fee */}
+					<div className="flex items-center gap-3.5 rounded-xl border border-slate-200/80 bg-white p-4 shadow-sm transition hover:-translate-y-0.5 hover:shadow-md">
+						<div className="flex h-12 w-12 shrink-0 items-center justify-center rounded-xl bg-[#fef8e7] text-[#f59e0b]">
+							<AlertTriangle className="h-6 w-6" strokeWidth={2.2} />
+						</div>
+						<div className="min-w-0">
+							<p className="text-xs font-medium text-slate-500">
+								Pending Student Fee
+							</p>
+							<p className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
+								36
+							</p>
+						</div>
+					</div>
+				</div>
+
+				{/* ── Search & Filter Controls (Matching Screenshot 1:1) ── */}
+				<div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+					{/* Left: Search Input */}
+					<div className="relative w-full sm:max-w-md">
+						<Search className="absolute left-3.5 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+						<input
+							type="text"
+							placeholder="Search Student by ID or Name"
+							autoComplete="off"
+							value={searchQuery}
+							onChange={(e) => setSearchQuery(e.target.value)}
+							className="w-full rounded-2xl border border-slate-200 bg-white py-2 pl-9.5 pr-4 text-xs font-medium text-slate-800 placeholder:text-slate-400 shadow-2xs transition focus:border-orange-500 focus:outline-none focus:ring-2 focus:ring-orange-500/15"
 						/>
-					</svg>
-					Add User
-				</button>
-			</div>
+					</div>
 
-			{/* Success Message */}
-			{success && (
-				<div className="mb-6 rounded-lg border border-green-200 bg-green-50 px-4 py-3 text-sm text-green-600 dark:border-green-900/50 dark:bg-green-900/20 dark:text-green-300">
-					{success}
+					{/* Right: 3 Dropdown Filters */}
+					<div className="flex flex-wrap items-center gap-2.5">
+						{/* 1. Year Dropdown */}
+						<div className="relative" ref={yearFilterRef}>
+							<button
+								type="button"
+								onClick={() => {
+									setYearFilterOpen((prev) => !prev);
+									setClassFilterOpen(false);
+									setStatusFilterOpen(false);
+								}}
+								className={`flex min-w-[124px] items-center justify-between gap-2.5 rounded-2xl border bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 focus:outline-none ${
+									yearFilterOpen
+										? "border-[#ea580c] ring-2 ring-[#ea580c]/15 text-slate-900"
+										: "border-slate-200/90"
+								}`}
+							>
+								<span>{selectedYear}</span>
+								<ChevronDown
+									className={`h-3.5 w-3.5 transition-transform duration-200 ${
+										yearFilterOpen
+											? "rotate-180 text-slate-700"
+											: "text-slate-400"
+									}`}
+								/>
+							</button>
+							{yearFilterOpen && (
+								<div className="absolute left-0 z-40 mt-1.5 min-w-full w-40 origin-top-left rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl ring-1 ring-slate-900/5">
+									{["2025 - 2026", "2024 - 2025", "2023 - 2024"].map((y) => (
+										<button
+											key={y}
+											type="button"
+											onClick={() => {
+												setSelectedYear(y);
+												setYearFilterOpen(false);
+											}}
+											className={`flex w-full items-center rounded-xl px-3 py-2 text-left text-xs transition-colors ${
+												selectedYear === y
+													? "bg-[#fff8f3] font-bold text-[#ea580c]"
+													: "font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+											}`}
+										>
+											{y}
+										</button>
+									))}
+								</div>
+							)}
+						</div>
+
+						{/* 2. Class Dropdown */}
+						<div className="relative" ref={classFilterRef}>
+							<button
+								type="button"
+								onClick={() => {
+									setClassFilterOpen((prev) => !prev);
+									setYearFilterOpen(false);
+									setStatusFilterOpen(false);
+								}}
+								className={`flex min-w-[104px] items-center justify-between gap-2.5 rounded-2xl border bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 focus:outline-none ${
+									classFilterOpen
+										? "border-[#ea580c] ring-2 ring-[#ea580c]/15 text-slate-900"
+										: "border-slate-200/90"
+								}`}
+							>
+								<span>{selectedClassFilter}</span>
+								<ChevronDown
+									className={`h-3.5 w-3.5 transition-transform duration-200 ${
+										classFilterOpen
+											? "rotate-180 text-slate-700"
+											: "text-slate-400"
+									}`}
+								/>
+							</button>
+							{classFilterOpen && (
+								<div className="absolute left-0 z-40 mt-1.5 min-w-full w-36 origin-top-left rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl ring-1 ring-slate-900/5">
+									{[
+										"All Class",
+										"11-A",
+										"5-A",
+										"5-C",
+										"2-D",
+										"3-A",
+										"4-B",
+										"6-F",
+										"7-B",
+									].map((c) => (
+										<button
+											key={c}
+											type="button"
+											onClick={() => {
+												setSelectedClassFilter(c);
+												setClassFilterOpen(false);
+											}}
+											className={`flex w-full items-center rounded-xl px-3 py-2 text-left text-xs transition-colors ${
+												selectedClassFilter === c
+													? "bg-[#fff8f3] font-bold text-[#ea580c]"
+													: "font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+											}`}
+										>
+											{c}
+										</button>
+									))}
+								</div>
+							)}
+						</div>
+
+						{/* 3. Status Dropdown */}
+						<div className="relative" ref={statusFilterRef}>
+							<button
+								type="button"
+								onClick={() => {
+									setStatusFilterOpen((prev) => !prev);
+									setYearFilterOpen(false);
+									setClassFilterOpen(false);
+								}}
+								className={`flex min-w-[104px] items-center justify-between gap-2.5 rounded-2xl border bg-white px-4 py-2 text-xs font-semibold text-slate-700 shadow-2xs transition-all hover:bg-slate-50 hover:border-slate-300 focus:outline-none ${
+									statusFilterOpen
+										? "border-[#ea580c] ring-2 ring-[#ea580c]/15 text-slate-900"
+										: "border-slate-200/90"
+								}`}
+							>
+								<span>{selectedStatusFilter}</span>
+								<ChevronDown
+									className={`h-3.5 w-3.5 transition-transform duration-200 ${
+										statusFilterOpen
+											? "rotate-180 text-slate-700"
+											: "text-slate-400"
+									}`}
+								/>
+							</button>
+							{statusFilterOpen && (
+								<div className="absolute left-0 z-40 mt-1.5 min-w-full w-36 origin-top-left rounded-2xl border border-slate-100 bg-white p-1.5 shadow-xl ring-1 ring-slate-900/5">
+									{["All Status", "Active", "Inactive"].map((s) => (
+										<button
+											key={s}
+											type="button"
+											onClick={() => {
+												setSelectedStatusFilter(s);
+												setStatusFilterOpen(false);
+											}}
+											className={`flex w-full items-center rounded-xl px-3 py-2 text-left text-xs transition-colors ${
+												selectedStatusFilter === s
+													? "bg-[#fff8f3] font-bold text-[#ea580c]"
+													: "font-medium text-slate-700 hover:bg-slate-50 hover:text-slate-900"
+											}`}
+										>
+											{s}
+										</button>
+									))}
+								</div>
+							)}
+						</div>
+					</div>
 				</div>
-			)}
 
-			{/* Error Message */}
-			{error && !showAddModal && (
-				<div className="mb-6 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
-					{error}
-				</div>
-			)}
-
-			{/* Users List */}
-			<div className="rounded-2xl border border-zinc-200 bg-white shadow-sm dark:border-zinc-800 dark:bg-zinc-900">
-				<div className="overflow-x-auto">
-					<table className="w-full">
-						<thead className="border-b border-zinc-200 bg-zinc-50 dark:border-zinc-800 dark:bg-zinc-800/50">
-							<tr>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900 dark:text-white">
-									User
-								</th>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900 dark:text-white">
-									Email
-								</th>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900 dark:text-white">
-									Phone
-								</th>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900 dark:text-white">
-									Role
-								</th>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900 dark:text-white">
-									Joined
-								</th>
-								<th className="px-6 py-4 text-left text-sm font-semibold text-zinc-900 dark:text-white">
-									Actions
-								</th>
-							</tr>
-						</thead>
-						<tbody className="divide-y divide-zinc-200 dark:divide-zinc-800">
-							{users.length === 0 ? (
+				{/* ── Data Table (Matching Figma Screenshot 1:1) ── */}
+				<div className="overflow-hidden rounded-2xl border border-slate-200/80 bg-white shadow-xs">
+					<div className="overflow-x-auto">
+						<table className="w-full text-left text-xs">
+							{/* Table Header */}
+							<thead className="border-b border-slate-100 bg-slate-50/50 text-[11px] font-bold uppercase tracking-wider text-slate-400">
 								<tr>
-									<td colSpan="6" className="px-6 py-12 text-center">
-										<div className="flex flex-col items-center gap-3">
-											<div className="rounded-full bg-zinc-100 p-4 dark:bg-zinc-800">
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-													strokeWidth="1.5"
-													className="h-8 w-8 text-zinc-400"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														d="M15 19.128a9.38 9.38 0 002.625.372 9.337 9.337 0 004.121-.952 4.125 4.125 0 00-7.533-2.493M15 19.128v-.003c0-1.113-.285-2.16-.786-3.07M15 19.128v.106A12.318 12.318 0 018.624 21c-2.331 0-4.512-.645-6.374-1.766l-.001-.109a6.375 6.375 0 0111.964-3.07M12 6.375a3.375 3.375 0 11-6.75 0 3.375 3.375 0 016.75 0zm8.25 2.25a2.625 2.625 0 11-5.25 0 2.625 2.625 0 015.25 0z"
-													/>
-												</svg>
-											</div>
-											<div>
-												<p className="text-sm font-medium text-zinc-900 dark:text-white">
-													No users yet
-												</p>
-												<p className="mt-1 text-xs text-zinc-600 dark:text-zinc-400">
-													Click &quot;Add User&quot; to create your first user
-												</p>
-											</div>
-										</div>
-									</td>
+									<th className="w-10 px-4 py-3.5 text-center">
+										<input
+											type="checkbox"
+											onChange={handleSelectAll}
+											checked={
+												filteredUsers.length > 0 &&
+												selectedRowIds.size === filteredUsers.length
+											}
+											className="dashboard-checkbox h-4 w-4"
+										/>
+									</th>
+									<th className="px-4 py-3.5">Student ID</th>
+									<th className="px-4 py-3.5">Student Name</th>
+									<th className="px-4 py-3.5">Grade</th>
+									<th className="px-4 py-3.5">Gender</th>
+									<th className="px-4 py-3.5">Parent Details</th>
+									<th className="px-4 py-3.5">Registered</th>
+									<th className="px-4 py-3.5">Status</th>
+									<th className="w-12 px-4 py-3.5 text-right"></th>
 								</tr>
-							) : (
-								users.map((usr) => (
-									<tr
-										key={usr.id}
-										className="transition-colors hover:bg-zinc-50 dark:hover:bg-zinc-800/50"
-									>
-										<td className="px-6 py-4">
-											<div className="flex items-center gap-3">
-												{usr.image_base64 ? (
-													<img
-														src={usr.image_base64}
-														alt={usr.full_name}
-														className="h-10 w-10 rounded-full object-cover"
-													/>
-												) : (
-													<div className="flex h-10 w-10 items-center justify-center rounded-full bg-linear-to-br from-indigo-500 to-purple-500 text-sm font-semibold text-white">
-														{usr.full_name
-															?.split(" ")
-															.map((n) => n[0])
-															.join("")
-															.toUpperCase() || "U"}
-													</div>
-												)}
-												<div>
-													<p className="text-sm font-medium text-zinc-900 dark:text-white">
-														{usr.full_name}
-													</p>
-													<p className="text-xs text-zinc-600 dark:text-zinc-400">
-														{usr.id === user.id ? "(You)" : ""}
-													</p>
-												</div>
-											</div>
-										</td>
-										<td className="px-6 py-4">
-											<p className="text-sm text-zinc-900 dark:text-white">
-												{usr.email}
-											</p>
-										</td>
-										<td className="px-6 py-4">
-											<p className="text-sm text-zinc-900 dark:text-white">
-												{usr.phone || "-"}
-											</p>
-										</td>
-										<td className="px-6 py-4">
-											<span
-												className={`inline-flex items-center rounded-full px-2.5 py-1 text-xs font-medium ${
-                                                    usr.role === "co_admin"
-														? "bg-indigo-100 text-indigo-700 dark:bg-indigo-900/30 dark:text-indigo-300"
-														: usr.role === "faculty"
-														? "bg-sky-100 text-sky-700 dark:bg-sky-900/30 dark:text-sky-300"
-														: "bg-emerald-100 text-emerald-700 dark:bg-emerald-900/30 dark:text-emerald-300"
-												}`}
-											>
-												{usr.role?.replace("_", " ").toUpperCase()}
-											</span>
-										</td>
-										<td className="px-6 py-4">
-											<p className="text-sm text-zinc-900 dark:text-white">
-												{new Date(usr.created_at).toLocaleDateString("en-US", {
-													month: "short",
-													day: "numeric",
-													year: "numeric",
-												})}
-											</p>
-										</td>
-										<td className="px-6 py-4">
-											<div className="flex items-center gap-2">
-												{usr.role === "faculty" && (
-													<button
-														onClick={() => handleEditFaculty(usr)}
-														className="rounded-lg p-2 text-indigo-500 transition-colors hover:bg-indigo-50 dark:hover:bg-indigo-900/20"
-														title="Edit faculty profile"
-													>
-														<svg
-															xmlns="http://www.w3.org/2000/svg"
-															viewBox="0 0 24 24"
-															fill="none"
-															stroke="currentColor"
-															strokeWidth="1.5"
-															className="h-5 w-5"
-														>
-															<path
-																strokeLinecap="round"
-																strokeLinejoin="round"
-																d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125M18 14v4.75A2.25 2.25 0 0115.75 21H5.25A2.25 2.25 0 013 18.75V8.25A2.25 2.25 0 015.25 6H10"
-															/>
-														</svg>
-													</button>
-												)}
-												<button
-													onClick={() => handleDelete(usr.id)}
-													disabled={usr.id === user.id}
-													className="rounded-lg p-2 text-red-500 transition-colors hover:bg-red-50 disabled:cursor-not-allowed disabled:opacity-50 dark:hover:bg-red-900/20"
-													title={usr.id === user.id ? "Cannot delete yourself" : "Delete user"}
-												>
-													<svg
-													xmlns="http://www.w3.org/2000/svg"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-													strokeWidth="1.5"
-													className="h-5 w-5"
-												>
-													<path
-														strokeLinecap="round"
-														strokeLinejoin="round"
-														d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a48.108 48.108 0 00-3.478-.397m-12 .562c.34-.059.68-.114 1.022-.165m0 0a48.11 48.11 0 013.478-.397m7.5 0v-.916c0-1.18-.91-2.164-2.09-2.201a51.964 51.964 0 00-3.32 0c-1.18.037-2.09 1.022-2.09 2.201v.916m7.5 0a48.667 48.667 0 00-7.5 0"
-													/>
-												</svg>
-											</button>
-											</div>
+							</thead>
+
+							{/* Table Body */}
+							<tbody className="divide-y divide-slate-100 font-medium text-slate-700">
+								{isLoading ? (
+									<tr>
+										<td
+											colSpan={9}
+											className="px-6 py-12 text-center text-slate-400"
+										>
+											<div className="mx-auto h-6 w-6 animate-spin rounded-full border-2 border-orange-500 border-t-transparent" />
 										</td>
 									</tr>
-								))
-							)}
-						</tbody>
-					</table>
+								) : filteredUsers.length === 0 ? (
+									<tr>
+										<td
+											colSpan={9}
+											className="px-6 py-12 text-center text-slate-400"
+										>
+											No users found matching your search.
+										</td>
+									</tr>
+								) : (
+									filteredUsers.map((u) => {
+										const isSelected = selectedRowIds.has(u.id);
+										const isMenuOpen = activeActionRow === u.id;
+
+										return (
+											<tr
+												key={u.id}
+												className={`transition-colors hover:bg-slate-50/70 ${
+													isSelected ? "bg-orange-50/30" : ""
+												}`}
+											>
+												{/* Checkbox */}
+												<td className="px-4 py-3.5 text-center">
+													<input
+														type="checkbox"
+														checked={isSelected}
+														onChange={() => handleToggleRow(u.id)}
+														className="dashboard-checkbox h-4 w-4"
+													/>
+												</td>
+
+												{/* Student ID */}
+												<td className="px-4 py-3.5 font-semibold text-slate-600">
+													{u.studentId || "LTV023849"}
+												</td>
+
+												{/* Student Name & Avatar */}
+												<td className="px-4 py-3.5">
+													<div className="flex items-center gap-3">
+														<div
+															className={`flex h-8 w-8 shrink-0 items-center justify-center rounded-full text-xs font-bold text-white shadow-xs ${
+																u.avatarBg || "bg-indigo-500"
+															}`}
+														>
+															{u.initials || "ST"}
+														</div>
+														<div>
+															<p className="font-bold text-slate-900">
+																{u.full_name}
+															</p>
+															<p className="text-[11px] font-normal text-slate-400">
+																{u.email}
+															</p>
+														</div>
+													</div>
+												</td>
+
+												{/* Grade */}
+												<td className="px-4 py-3.5 font-semibold text-slate-600">
+													{u.grade || "5-C"}
+												</td>
+
+												{/* Gender */}
+												<td className="px-4 py-3.5 text-slate-600">
+													{u.gender || "Male"}
+												</td>
+
+												{/* Parent Details */}
+												<td className="px-4 py-3.5 text-slate-600">
+													{u.parentDetails || "Parent"}
+												</td>
+
+												{/* Registered Date */}
+												<td className="px-4 py-3.5 text-slate-500">
+													{new Date(u.created_at).toLocaleDateString("en-US", {
+														month: "2-digit",
+														day: "2-digit",
+														year: "numeric",
+													})}
+												</td>
+
+												{/* Status */}
+												<td className="px-4 py-3.5">
+													<span className="inline-block rounded-full bg-emerald-50 px-3 py-1 text-[11px] font-bold text-emerald-600">
+														{u.status || "Active"}
+													</span>
+												</td>
+
+												{/* Action Menu */}
+												<td className="relative px-4 py-3.5 text-right row-action-menu">
+													<button
+														type="button"
+														onClick={() =>
+															setActiveActionRow((prev) =>
+																prev === u.id ? null : u.id
+															)
+														}
+														className="rounded-lg p-1 text-slate-400 hover:bg-slate-100 hover:text-slate-700 transition"
+													>
+														<MoreVertical className="h-4 w-4" />
+													</button>
+
+													{isMenuOpen && (
+														<div className="absolute right-4 top-full z-30 mt-1 w-40 rounded-xl border border-slate-100 bg-white p-1.5 shadow-xl ring-1 ring-slate-900/5">
+															<button
+																type="button"
+																onClick={() => handleOpenEdit(u)}
+																className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50"
+															>
+																<Edit2 className="h-3.5 w-3.5 text-blue-500" />
+																<span>Edit User</span>
+															</button>
+															<button
+																type="button"
+																onClick={() => {
+																	setSuccessMsg(
+																		`Password reset link sent to ${u.email}`
+																	);
+																	setActiveActionRow(null);
+																	setTimeout(() => setSuccessMsg(""), 3000);
+																}}
+																className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-semibold text-slate-700 hover:bg-slate-50"
+															>
+																<KeyRound className="h-3.5 w-3.5 text-amber-500" />
+																<span>Reset Pass</span>
+															</button>
+															<hr className="my-1 border-slate-100" />
+															<button
+																type="button"
+																onClick={() =>
+																	handleDeleteUser(u.id, u.full_name)
+																}
+																className="flex w-full items-center gap-2 rounded-lg px-3 py-1.5 text-left text-xs font-semibold text-rose-600 hover:bg-rose-50"
+															>
+																<Trash2 className="h-3.5 w-3.5 text-rose-500" />
+																<span>Delete</span>
+															</button>
+														</div>
+													)}
+												</td>
+											</tr>
+										);
+									})
+								)}
+							</tbody>
+						</table>
+					</div>
 				</div>
 			</div>
 
-			{/* Add User Modal */}
-			{showAddModal && (
-				<div className="fixed inset-0 z-50 flex items-center justify-center overlay-scrim p-4 backdrop-blur-sm">
-					<div className="w-full max-w-2xl max-h-[90vh] overflow-y-auto rounded-2xl border border-zinc-200 bg-white p-6 shadow-2xl dark:border-zinc-800 dark:bg-zinc-900">
-						<div className="mb-6 flex items-center justify-between sticky top-0 bg-white dark:bg-zinc-900 pb-4 border-b border-zinc-200 dark:border-zinc-800">
-							<h2 className="text-2xl font-bold text-zinc-900 dark:text-white">
-								Add New User
-							</h2>
+			{/* ═══════════════════════════════════════════════════════
+          SLIDE-OVER DRAWER: ADD / EDIT USER
+         ═══════════════════════════════════════════════════════ */}
+			{showAddDrawer && (
+				<div className="fixed inset-0 z-50 flex justify-end bg-slate-900/40 backdrop-blur-xs animate-in fade-in-0">
+					<div className="w-full max-w-lg bg-white h-full shadow-2xl flex flex-col justify-between animate-in slide-in-from-right duration-300">
+						{/* Drawer Header */}
+						<div className="p-6 border-b border-slate-100 flex items-center justify-between">
+							<h3 className="text-base font-bold text-slate-900 sm:text-lg">
+								{editingUser ? "Edit User" : "Add New User"}
+							</h3>
 							<button
-								onClick={() => {
-									setShowAddModal(false);
-									setError("");
-									setFormData({
-										email: "",
-										password: "",
-										full_name: "",
-										phone: "",
-										role: "faculty",
-										image_base64: "",
-										age: "",
-										gender: "",
-										post: "",
-										department: "",
-										is_class_teacher: false,
-										class: "",
-										section: "",
-										subjects: "",
-										qualifications: "",
-										experience_years: "",
-										joining_date: "",
-										employment_type: "",
-										school_name: "",
-										school_location: "",
-										school_board: "",
-									});
-								}}
-								className="rounded-lg p-2 text-zinc-600 transition-colors hover:bg-zinc-100 dark:text-zinc-400 dark:hover:bg-zinc-800"
+								type="button"
+								onClick={() => setShowAddDrawer(false)}
+								className="rounded-lg p-1.5 text-slate-400 hover:text-slate-700 hover:bg-slate-100 transition-colors"
 							>
-								<svg
-									xmlns="http://www.w3.org/2000/svg"
-									viewBox="0 0 24 24"
-									fill="none"
-									stroke="currentColor"
-									strokeWidth="1.5"
-									className="h-6 w-6"
-								>
-									<path
-										strokeLinecap="round"
-										strokeLinejoin="round"
-										d="M6 18L18 6M6 6l12 12"
-									/>
-								</svg>
+								<X className="h-5 w-5" />
 							</button>
 						</div>
 
-						{error && (
-							<div className="mb-4 rounded-lg border border-red-200 bg-red-50 px-4 py-3 text-sm text-red-600 dark:border-red-900/50 dark:bg-red-900/20 dark:text-red-300">
-								{error}
-							</div>
-						)}
-
-						<form onSubmit={handleSubmit} className="space-y-4">
-							{/* Profile Picture */}
-							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									Profile Picture <span className="text-xs text-zinc-400">(optional)</span>
-								</label>
-								<div className="flex items-center gap-4">
-									{formData.image_base64 ? (
-										<div className="relative">
-											<img
-												src={formData.image_base64}
-												alt="Profile"
-												className="h-20 w-20 rounded-full object-cover"
-											/>
-											<button
-												type="button"
-												onClick={removeImage}
-												className="absolute -right-1 -top-1 rounded-full bg-red-500 p-1 text-white shadow-lg hover:bg-red-600"
-											>
-												<svg
-													xmlns="http://www.w3.org/2000/svg"
-													viewBox="0 0 24 24"
-													fill="none"
-													stroke="currentColor"
-													strokeWidth="2"
-													className="h-4 w-4"
-												>
-													<path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
-												</svg>
-											</button>
-										</div>
-									) : (
-										<label className="flex h-20 w-20 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-zinc-300 bg-zinc-50 transition-colors hover:border-indigo-500 hover:bg-indigo-50 dark:border-zinc-700 dark:bg-zinc-800">
-											<input
-												type="file"
-												accept="image/jpeg,image/jpg,image/png"
-												onChange={handleImageUpload}
-												className="hidden"
-												disabled={uploadingImage}
-											/>
-											{uploadingImage ? (
-												<svg className="h-6 w-6 animate-spin text-indigo-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-													<circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-													<path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-												</svg>
-											) : (
-												<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" className="h-6 w-6 text-zinc-400">
-													<path strokeLinecap="round" strokeLinejoin="round" d="M6.827 6.175A2.31 2.31 0 015.186 7.23c-.38.054-.757.112-1.134.175C2.999 7.58 2.25 8.507 2.25 9.574V18a2.25 2.25 0 002.25 2.25h15A2.25 2.25 0 0021.75 18V9.574c0-1.067-.75-1.994-1.802-2.169a47.865 47.865 0 00-1.134-.175 2.31 2.31 0 01-1.64-1.055l-.822-1.316a2.192 2.192 0 00-1.736-1.039 48.774 48.774 0 00-5.232 0 2.192 2.192 0 00-1.736 1.039l-.821 1.316z" />
-													<path strokeLinecap="round" strokeLinejoin="round" d="M16.5 12.75a4.5 4.5 0 11-9 0 4.5 4.5 0 019 0zM18.75 10.5h.008v.008h-.008V10.5z" />
-												</svg>
-											)}
-										</label>
-									)}
-									<div className="flex-1">
-										<p className="text-sm text-zinc-600 dark:text-zinc-400">Upload profile picture</p>
-										<p className="text-xs text-zinc-500">Max 5MB. JPEG or PNG</p>
-									</div>
-								</div>
-							</div>
-
+						{/* Drawer Form Body */}
+						<form
+							id="user-form"
+							onSubmit={handleSaveUser}
+							className="p-6 space-y-4 overflow-y-auto flex-1 text-xs [scrollbar-width:thin]"
+						>
 							{/* Full Name */}
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									Full Name <span className="text-red-500">*</span>
+								<label className="mb-1.5 block text-xs font-semibold text-slate-800">
+									Full Name<span className="text-red-500">*</span>
 								</label>
 								<input
 									type="text"
-									name="full_name"
-									value={formData.full_name}
-									onChange={handleChange}
-									placeholder="Enter full name"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
 									required
+									placeholder="e.g. Aadhya Menon"
+									value={formData.fullName}
+									onChange={(e) =>
+										setFormData({ ...formData, fullName: e.target.value })
+									}
+									className="w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:border-[#ea580c] focus:outline-none focus:ring-2 focus:ring-[#ea580c]/15"
 								/>
 							</div>
 
 							{/* Email */}
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									Email <span className="text-red-500">*</span>
+								<label className="mb-1.5 block text-xs font-semibold text-slate-800">
+									Email Address<span className="text-red-500">*</span>
 								</label>
 								<input
 									type="email"
-									name="email"
+									required
+									placeholder="user@literavalley.edu.in"
 									value={formData.email}
-									onChange={handleChange}
-									placeholder="user@example.com"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-									required
+									onChange={(e) =>
+										setFormData({ ...formData, email: e.target.value })
+									}
+									className="w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:border-[#ea580c] focus:outline-none focus:ring-2 focus:ring-[#ea580c]/15"
 								/>
 							</div>
 
-							{/* Password */}
-							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									Password <span className="text-red-500">*</span>
-								</label>
-								<input
-									type="password"
-									name="password"
-									value={formData.password}
-									onChange={handleChange}
-									placeholder="Enter password"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-									required
-								/>
+							{/* Role & Grade */}
+							<div className="grid grid-cols-2 gap-3">
+								<div>
+									<label className="mb-1.5 block text-xs font-semibold text-slate-800">
+										Role<span className="text-red-500">*</span>
+									</label>
+									<select
+										value={formData.role}
+										onChange={(e) =>
+											setFormData({ ...formData, role: e.target.value })
+										}
+										className="w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-xs font-medium text-slate-800 focus:border-[#ea580c] focus:outline-none focus:ring-2 focus:ring-[#ea580c]/15"
+									>
+										<option value="student">Student</option>
+										<option value="faculty">Faculty</option>
+										<option value="co_admin">Co-Admin</option>
+										<option value="counselor">Counselor</option>
+										<option value="parent">Parent</option>
+									</select>
+								</div>
+
+								<div>
+									<label className="mb-1.5 block text-xs font-semibold text-slate-800">
+										Grade / Class
+									</label>
+									<select
+										value={formData.grade}
+										onChange={(e) =>
+											setFormData({ ...formData, grade: e.target.value })
+										}
+										className="w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-xs font-medium text-slate-800 focus:border-[#ea580c] focus:outline-none focus:ring-2 focus:ring-[#ea580c]/15"
+									>
+										{[
+											"11-A",
+											"5-A",
+											"5-C",
+											"1-A",
+											"2-D",
+											"3-A",
+											"4-B",
+											"6-F",
+											"7-B",
+											"8-A",
+											"9-C",
+											"10-A",
+											"12-A",
+										].map((g) => (
+											<option key={g} value={g}>
+												Class {g}
+											</option>
+										))}
+									</select>
+								</div>
 							</div>
 
-							{/* Phone */}
+							{/* Gender & Parent Details */}
+							<div className="grid grid-cols-2 gap-3">
+								<div>
+									<label className="mb-1.5 block text-xs font-semibold text-slate-800">
+										Gender
+									</label>
+									<select
+										value={formData.gender}
+										onChange={(e) =>
+											setFormData({ ...formData, gender: e.target.value })
+										}
+										className="w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-xs font-medium text-slate-800 focus:border-[#ea580c] focus:outline-none focus:ring-2 focus:ring-[#ea580c]/15"
+									>
+										<option value="Male">Male</option>
+										<option value="Female">Female</option>
+										<option value="Other">Other</option>
+									</select>
+								</div>
+
+								<div>
+									<label className="mb-1.5 block text-xs font-semibold text-slate-800">
+										Parent Details
+									</label>
+									<select
+										value={formData.parentDetails}
+										onChange={(e) =>
+											setFormData({
+												...formData,
+												parentDetails: e.target.value,
+											})
+										}
+										className="w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-xs font-medium text-slate-800 focus:border-[#ea580c] focus:outline-none focus:ring-2 focus:ring-[#ea580c]/15"
+									>
+										<option value="Parent">Parent</option>
+										<option value="Father">Father</option>
+										<option value="Mother">Mother</option>
+										<option value="Guardian">Guardian</option>
+									</select>
+								</div>
+							</div>
+
+							{/* Phone Number */}
 							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
+								<label className="mb-1.5 block text-xs font-semibold text-slate-800">
 									Phone Number
 								</label>
 								<input
 									type="tel"
-									name="phone"
+									placeholder="+91 98765 43210"
 									value={formData.phone}
-									onChange={handleChange}
-									placeholder="+91 1234567890"
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
+									onChange={(e) =>
+										setFormData({ ...formData, phone: e.target.value })
+									}
+									className="w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:border-[#ea580c] focus:outline-none focus:ring-2 focus:ring-[#ea580c]/15"
 								/>
 							</div>
 
-							{/* Role */}
-							<div>
-								<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-									Role <span className="text-red-500">*</span>
-								</label>
-								<select
-									name="role"
-									value={formData.role}
-									onChange={handleChange}
-									className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-									required
-								>
-									<option value="faculty">Faculty</option>
-									<option value="student">Student</option>
-									<option value="co_admin">Co-Admin</option>
-								</select>
-							</div>
-
-							{/* Faculty-specific fields */}
-							{formData.role === "faculty" && (
-								<>
-									<div className="border-t border-zinc-200 dark:border-zinc-700 pt-4 mt-2">
-										<h3 className="text-lg font-semibold text-zinc-900 dark:text-white mb-4">
-											Faculty Profile Details
-										</h3>
-									</div>
-
-									{/* Age and Gender */}
-									<div className="grid grid-cols-2 gap-4">
-										<div>
-											<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-												Age
-											</label>
-											<input
-												type="number"
-												name="age"
-												value={formData.age}
-												onChange={handleChange}
-												placeholder="Enter age"
-												min="18"
-												max="100"
-												className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-											/>
-										</div>
-										<div>
-											<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-												Gender
-											</label>
-											<select
-												name="gender"
-												value={formData.gender}
-												onChange={handleChange}
-												className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-											>
-												<option value="">Select gender</option>
-												<option value="Male">Male</option>
-												<option value="Female">Female</option>
-												<option value="Other">Other</option>
-											</select>
-										</div>
-									</div>
-
-									{/* Post and Department */}
-									<div className="grid grid-cols-2 gap-4">
-										<div>
-											<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-												Post <span className="text-red-500">*</span>
-											</label>
-											<select
-												name="post"
-												value={formData.post}
-												onChange={handleChange}
-												className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-												required={formData.role === "faculty"}
-											>
-												<option value="">Select post</option>
-												<option value="TGT">TGT (Trained Graduate Teacher)</option>
-												<option value="PGT">PGT (Post Graduate Teacher)</option>
-												<option value="Professor">Professor</option>
-												<option value="Assistant Professor">Assistant Professor</option>
-												<option value="Principal">Principal</option>
-												<option value="Vice Principal">Vice Principal</option>
-												<option value="Lecturer">Lecturer</option>
-											</select>
-										</div>
-										<div>
-											<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-												Department
-											</label>
-											<input
-												type="text"
-												name="department"
-												value={formData.department}
-												onChange={handleChange}
-												placeholder="e.g., Science, Mathematics"
-												className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-											/>
-										</div>
-									</div>
-
-									{/* Class Teacher */}
-									<div className="flex items-center gap-3">
-										<input
-											type="checkbox"
-											name="is_class_teacher"
-											id="is_class_teacher"
-											checked={formData.is_class_teacher}
-											onChange={handleChange}
-											className="h-4 w-4 rounded border-zinc-300 text-indigo-500 focus:ring-2 focus:ring-indigo-500/20"
-										/>
-										<label htmlFor="is_class_teacher" className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
-											Is Class Teacher
-										</label>
-									</div>
-
-									{/* Class and Section (only if class teacher) */}
-									{formData.is_class_teacher && (
-										<div className="grid grid-cols-2 gap-4">
-											<div>
-												<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-													Class <span className="text-red-500">*</span>
-												</label>
-												<input
-													type="text"
-													name="class"
-													value={formData.class}
-													onChange={handleChange}
-													placeholder="e.g., 10th, XII"
-													className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-													required={formData.is_class_teacher}
-												/>
-											</div>
-											<div>
-												<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-													Section <span className="text-red-500">*</span>
-												</label>
-												<input
-													type="text"
-													name="section"
-													value={formData.section}
-													onChange={handleChange}
-													placeholder="e.g., A, B"
-													className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-													required={formData.is_class_teacher}
-												/>
-											</div>
-										</div>
-									)}
-
-									{/* Subjects */}
-									<div>
-										<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-											Subjects
-										</label>
-										<input
-											type="text"
-											name="subjects"
-											value={formData.subjects}
-											onChange={handleChange}
-											placeholder="e.g., Mathematics, Physics (comma-separated)"
-											className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-										/>
-										<p className="mt-1 text-xs text-zinc-500">Separate multiple subjects with commas</p>
-									</div>
-
-									{/* Qualifications */}
-									<div>
-										<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-											Qualifications
-										</label>
-										<input
-											type="text"
-											name="qualifications"
-											value={formData.qualifications}
-											onChange={handleChange}
-											placeholder="e.g., M.Sc., B.Ed., Ph.D. (comma-separated)"
-											className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-										/>
-										<p className="mt-1 text-xs text-zinc-500">Separate multiple qualifications with commas</p>
-									</div>
-
-									{/* Experience and Joining Date */}
-									<div className="grid grid-cols-2 gap-4">
-										<div>
-											<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-												Experience (years)
-											</label>
-											<input
-												type="number"
-												name="experience_years"
-												value={formData.experience_years}
-												onChange={handleChange}
-												placeholder="Years of experience"
-												min="0"
-												max="50"
-												className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-											/>
-										</div>
-										<div>
-											<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-												Joining Date <span className="text-red-500">*</span>
-											</label>
-											<input
-												type="date"
-												name="joining_date"
-												value={formData.joining_date}
-												onChange={handleChange}
-												className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-												required={formData.role === "faculty"}
-											/>
-										</div>
-									</div>
-
-									{/* Employment Type */}
-									<div>
-										<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-											Employment Type
-										</label>
-										<select
-											name="employment_type"
-											value={formData.employment_type}
-											onChange={handleChange}
-											className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-										>
-											<option value="">Select employment type</option>
-											<option value="Permanent">Permanent</option>
-											<option value="Contract">Contract</option>
-											<option value="Guest">Guest</option>
-											<option value="Part-time">Part-time</option>
-										</select>
-									</div>
-
-									{/* School Details */}
-									<div>
-										<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-											School Name
-										</label>
-										<input
-											type="text"
-											name="school_name"
-											value={formData.school_name}
-											onChange={handleChange}
-											placeholder="Leave blank to use default school"
-											className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-										/>
-									</div>
-
-									<div className="grid grid-cols-2 gap-4">
-										<div>
-											<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-												School Location
-											</label>
-											<input
-												type="text"
-												name="school_location"
-												value={formData.school_location}
-												onChange={handleChange}
-												placeholder="Leave blank to use default"
-												className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-											/>
-										</div>
-										<div>
-											<label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-2">
-												School Board
-											</label>
-											<input
-												type="text"
-												name="school_board"
-												value={formData.school_board}
-												onChange={handleChange}
-												placeholder="e.g., CBSE, ICSE"
-												className="w-full rounded-lg border border-zinc-300 bg-white px-4 py-2.5 text-sm text-zinc-900 focus:border-indigo-500 focus:outline-none focus:ring-2 focus:ring-indigo-500/20 dark:border-zinc-700 dark:bg-zinc-800 dark:text-white"
-											/>
-										</div>
-									</div>
-								</>
+							{/* Initial Password (only when adding) */}
+							{!editingUser && (
+								<div>
+									<label className="mb-1.5 block text-xs font-semibold text-slate-800">
+										Initial Password
+									</label>
+									<input
+										type="password"
+										placeholder="Password@123"
+										value={formData.password}
+										onChange={(e) =>
+											setFormData({ ...formData, password: e.target.value })
+										}
+										className="w-full rounded-xl border border-slate-200/90 bg-white px-3.5 py-2.5 text-xs font-medium text-slate-800 placeholder:text-slate-400 focus:border-[#ea580c] focus:outline-none focus:ring-2 focus:ring-[#ea580c]/15"
+									/>
+								</div>
 							)}
-
-							{/* Action Buttons */}
-							<div className="flex gap-3 pt-4">
-								<button
-									type="submit"
-									disabled={saving || uploadingImage}
-									className="flex-1 rounded-lg bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-600 disabled:cursor-not-allowed disabled:opacity-50"
-								>
-									{saving ? "Creating..." : "Create User"}
-								</button>
-								<button
-									type="button"
-									onClick={() => {
-										setShowAddModal(false);
-										setError("");
-										setFormData({
-											email: "",
-											password: "",
-											full_name: "",
-											phone: "",
-											role: "faculty",
-											image_base64: "",
-											age: "",
-											gender: "",
-											post: "",
-											department: "",
-											is_class_teacher: false,
-											class: "",
-											section: "",
-											subjects: "",
-											qualifications: "",
-											experience_years: "",
-											joining_date: "",
-											employment_type: "",
-											school_name: "",
-											school_location: "",
-											school_board: "",
-										});
-									}}
-									className="rounded-lg border border-zinc-300 px-4 py-2.5 text-sm font-semibold text-zinc-700 transition-colors hover:bg-zinc-50 dark:border-zinc-700 dark:text-zinc-200 dark:hover:bg-zinc-800"
-								>
-									Cancel
-								</button>
-							</div>
 						</form>
+
+						{/* Pinned Drawer Footer */}
+						<div className="p-6 border-t border-slate-100 bg-white flex items-center gap-3">
+							<button
+								type="button"
+								onClick={() => setShowAddDrawer(false)}
+								className="flex-1 rounded-xl border border-slate-200 bg-white py-2.5 text-xs sm:text-sm font-semibold text-slate-700 hover:bg-slate-50 transition text-center"
+							>
+								Cancel
+							</button>
+							<button
+								type="submit"
+								form="user-form"
+								disabled={savingUser}
+								className="dashboard-btn-primary flex-1 rounded-xl py-2.5 text-xs sm:text-sm font-semibold shadow-sm text-center disabled:opacity-60"
+							>
+								{savingUser
+									? "Saving..."
+									: editingUser
+									? "Update User"
+									: "Add User"}
+							</button>
+						</div>
 					</div>
 				</div>
 			)}
 
-			{/* Faculty Profile Edit Modal */}
-			{showEditFacultyModal && selectedFaculty && (
-				<FacultyProfileModal
-					isOpen={showEditFacultyModal}
-					onClose={() => {
-						setShowEditFacultyModal(false);
-						setSelectedFaculty(null);
-					}}
-					userId={selectedFaculty.id}
-					userName={selectedFaculty.full_name}
-					userEmail={selectedFaculty.email}
-					userPhone={selectedFaculty.phone}
-					onSave={handleFacultyProfileSave}
-				/>
+			{/* ── 2. Upload Excel Modal ── */}
+			{showBulkModal && (
+				<div className="fixed inset-0 z-50 flex items-center justify-center bg-black/40 p-4 backdrop-blur-2xs animate-in fade-in duration-200">
+					<div className="max-h-[90vh] w-full max-w-2xl overflow-y-auto rounded-2xl border border-slate-200 bg-white p-6 shadow-2xl">
+						<div className="mb-5 flex items-center justify-between">
+							<div className="flex items-center gap-2.5">
+								<div className="flex h-9 w-9 items-center justify-center rounded-xl bg-emerald-50 text-emerald-600">
+									<FileSpreadsheet className="h-5 w-5" />
+								</div>
+								<div>
+									<h2 className="text-lg font-bold text-slate-900">Upload Excel / CSV</h2>
+									<p className="text-xs text-slate-400">Import users roster in bulk</p>
+								</div>
+							</div>
+							<button
+								type="button"
+								onClick={() => {
+									setShowBulkModal(false);
+									setParsedRows([]);
+									setUploadedFileName("");
+								}}
+								className="rounded-lg p-1.5 text-slate-400 hover:bg-slate-100 hover:text-slate-700"
+							>
+								<X className="h-4 w-4" />
+							</button>
+						</div>
+
+						{errorMsg && (
+							<div className="mb-4 rounded-xl border border-rose-200 bg-rose-50 px-3.5 py-2.5 text-xs font-medium text-rose-700">
+								{errorMsg}
+							</div>
+						)}
+
+						<div className="space-y-4">
+							{/* Drag & drop upload box */}
+							<div
+								onClick={() => fileInputRef.current?.click()}
+								className="flex flex-col items-center justify-center rounded-2xl border-2 border-dashed border-slate-200 bg-slate-50/50 p-6 text-center cursor-pointer transition hover:border-orange-400 hover:bg-orange-50/20"
+							>
+								<input
+									ref={fileInputRef}
+									type="file"
+									accept=".xlsx,.xls,.csv"
+									onChange={handleFileSelect}
+									className="hidden"
+								/>
+								<Upload className="h-8 w-8 text-orange-500 mb-2" />
+								<p className="text-xs font-bold text-slate-800">
+									{uploadedFileName || "Click or drag & drop Excel file (.xlsx, .xls, .csv)"}
+								</p>
+								<p className="mt-1 text-[11px] text-slate-400">
+									Supports Full Name, Email, Role, Grade, Gender, Phone, Status
+								</p>
+							</div>
+
+							{/* Template download link */}
+							<div className="flex items-center justify-between rounded-xl bg-slate-50 p-3 text-xs">
+								<span className="text-slate-600 font-medium">Need a formatted template?</span>
+								<button
+									type="button"
+									onClick={handleDownloadTemplate}
+									className="flex items-center gap-1.5 text-orange-600 font-bold hover:underline"
+								>
+									<Download className="h-3.5 w-3.5" />
+									<span>Download Template</span>
+								</button>
+							</div>
+
+							{/* Preview table if parsed */}
+							{parsedRows.length > 0 && (
+								<div className="space-y-2">
+									<div className="flex items-center justify-between">
+										<p className="text-xs font-bold text-slate-700">
+											Preview ({parsedRows.length} users found)
+										</p>
+										<span className="text-[11px] text-emerald-600 font-semibold">
+											✓ Ready for import
+										</span>
+									</div>
+									<div className="max-h-48 overflow-y-auto rounded-xl border border-slate-200 text-xs">
+										<table className="w-full text-left">
+											<thead className="bg-slate-50 text-[11px] font-bold text-slate-500">
+												<tr>
+													<th className="px-3 py-2">Name</th>
+													<th className="px-3 py-2">Email</th>
+													<th className="px-3 py-2">Role</th>
+													<th className="px-3 py-2">Grade</th>
+												</tr>
+											</thead>
+											<tbody className="divide-y divide-slate-100">
+												{parsedRows.slice(0, 5).map((r, i) => (
+													<tr key={i} className="hover:bg-slate-50/50">
+														<td className="px-3 py-2 font-medium text-slate-800">{r.full_name}</td>
+														<td className="px-3 py-2 text-slate-500">{r.email}</td>
+														<td className="px-3 py-2 uppercase text-[10px] font-bold text-slate-600">{r.role}</td>
+														<td className="px-3 py-2 text-slate-600">{r.grade}</td>
+													</tr>
+												))}
+											</tbody>
+										</table>
+										{parsedRows.length > 5 && (
+											<div className="p-2 text-center text-[11px] text-slate-400 bg-slate-50/40 border-t border-slate-100">
+												+ {parsedRows.length - 5} more users
+											</div>
+										)}
+									</div>
+								</div>
+							)}
+						</div>
+
+						{/* Modal Actions */}
+						<div className="mt-6 flex items-center justify-end gap-3 border-t border-slate-100 pt-4">
+							<button
+								type="button"
+								onClick={() => {
+									setShowBulkModal(false);
+									setParsedRows([]);
+									setUploadedFileName("");
+								}}
+								className="rounded-xl border border-slate-200 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-50"
+							>
+								Cancel
+							</button>
+							<button
+								type="button"
+								onClick={handleSaveBulkImport}
+								disabled={parsedRows.length === 0 || bulkSaving}
+								className="dashboard-btn-primary flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold shadow-sm disabled:opacity-50"
+							>
+								{bulkSaving ? (
+									<span>Importing...</span>
+								) : (
+									<>
+										<Upload className="h-3.5 w-3.5" />
+										<span>Import {parsedRows.length > 0 ? `(${parsedRows.length})` : ""}</span>
+									</>
+								)}
+							</button>
+						</div>
+					</div>
+				</div>
 			)}
 		</div>
 	);

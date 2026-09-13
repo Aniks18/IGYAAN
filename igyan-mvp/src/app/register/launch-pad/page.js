@@ -146,6 +146,8 @@ export default function LaunchPadRegister() {
 									<img
 										src={imageBase64}
 										alt="Profile"
+										width={96}
+										height={96}
 										className="h-24 w-24 rounded-full border-2 border-zinc-200 object-cover dark:border-zinc-700"
 									/>
 									<button
@@ -172,6 +174,9 @@ export default function LaunchPadRegister() {
 							) : (
 								<label className="register-upload-control flex h-24 w-24 cursor-pointer items-center justify-center rounded-full border-2 border-dashed border-zinc-300 bg-zinc-50 transition-colors hover:border-cyan-500 hover:bg-cyan-50">
 									<input
+										id="launch-pad-avatar"
+										name="avatar"
+										aria-label="Upload profile picture"
 										type="file"
 										accept="image/jpeg,image/jpg,image/png"
 										onChange={handleImageUpload}

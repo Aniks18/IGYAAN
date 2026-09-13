@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../utils/auth_context";
 import { supabase } from "../../utils/supabase";
+import DatePicker from "../../../components/ui/DatePicker";
 import * as XLSX from "xlsx";
 import {
 	Search,
@@ -1360,17 +1361,14 @@ export default function FacultyManagementPage() {
 											<label className={labelCls}>
 												Date of Birth<span className="text-red-500">*</span>
 											</label>
-											<div className="relative">
-												<input
-													type="date"
-													autoComplete="off"
-													value={facultyForm.dob}
-													onChange={(e) =>
-														setFacultyForm({ ...facultyForm, dob: e.target.value })
-													}
-													className={inputCls}
-												/>
-											</div>
+											<DatePicker
+												required
+												value={facultyForm.dob}
+												onChange={(val) =>
+													setFacultyForm({ ...facultyForm, dob: val })
+												}
+												placeholder="dd/mm/yyyy"
+											/>
 										</div>
 									</div>
 
@@ -1449,20 +1447,16 @@ export default function FacultyManagementPage() {
 										</div>
 										<div>
 											<label className={labelCls}>Joining Date</label>
-											<div className="relative">
-												<input
-													type="date"
-													autoComplete="off"
-													value={facultyForm.joinedDate}
-													onChange={(e) =>
-														setFacultyForm({
-															...facultyForm,
-															joinedDate: e.target.value,
-														})
-													}
-													className={inputCls}
-												/>
-											</div>
+											<DatePicker
+												value={facultyForm.joinedDate}
+												onChange={(val) =>
+													setFacultyForm({
+														...facultyForm,
+														joinedDate: val,
+													})
+												}
+												placeholder="dd/mm/yyyy"
+											/>
 										</div>
 									</div>
 								</div>

@@ -106,6 +106,20 @@ export default function TimetablePage() {
 		}
 	}, [user, authLoading, router]);
 
+	const fetchClassesAndAssignments = useCallback(async (sId, sessId) => {
+		if (!sId || !sessId) return;
+		try {
+			const [clsRes, faRes] = await Promise.all([
+				supabase.from("classes").select("*").eq("school_id", sId).eq("session_id", sessId).order("class_name"),
+				supabase.from("faculty_assignments").select("faculty_id, subject_id, class_id, assignment_type").eq("school_id", sId).eq("session_id", sessId).eq("is_active", true)
+			]);
+			setClasses(clsRes.data || []);
+			setFacultyAssignments(faRes.data || []);
+		} catch (err) {
+			console.error("Error fetching timetable classes:", err);
+		}
+	}, []);
+
 	// ── Fetch school + core data ──
 	const fetchCoreData = useCallback(async () => {
 		if (!user?.school_id) { setPageLoading(false); return; }
@@ -121,45 +135,21 @@ export default function TimetablePage() {
 			]);
 
 			setSchoolData(schoolRes.data);
-			setSessions(sessRes.data || []);
+			const sessionsList = sessRes.data || [];
+			setSessions(sessionsList);
 			setSubjects(subRes.data || []);
 			setFaculty(facRes.data || []);
 
-			const activeSess = (sessRes.data || []).find((s) => s.is_active);
+			const activeSess = sessionsList.find((s) => s.is_active);
 			if (activeSess) {
 				setActiveSession(activeSess);
-				// Fetch classes for this session
-				const { data: clsData } = await supabase
-					.from("classes").select("*").eq("school_id", sId).eq("session_id", activeSess.id).order("class_name");
-				setClasses(clsData || []);
-				// Fetch faculty assignments to show subject with faculty name
-				const { data: faData } = await supabase
-					.from("faculty_assignments")
-					.select("faculty_id, subject_id, class_id, assignment_type")
-					.eq("school_id", sId)
-					.eq("session_id", activeSess.id)
-					.eq("is_active", true);
-				setFacultyAssignments(faData || []);
+				await fetchClassesAndAssignments(sId, activeSess.id);
 			}
 		} catch (err) { console.error(err); }
 		setPageLoading(false);
-	}, [user]);
+	}, [user?.school_id, fetchClassesAndAssignments]);
 
-	useEffect(() => { if (user) fetchCoreData(); }, [user, fetchCoreData]);
-
-	// When session changes, re-fetch classes
-	useEffect(() => {
-		if (!schoolId || !activeSession) return;
-		(async () => {
-			const { data } = await supabase.from("classes").select("*").eq("school_id", schoolId).eq("session_id", activeSession.id).order("class_name");
-			setClasses(data || []);
-			const { data: faData } = await supabase
-				.from("faculty_assignments")
-				.select("faculty_id, subject_id, class_id, assignment_type")
-				.eq("school_id", schoolId).eq("session_id", activeSession.id).eq("is_active", true);
-			setFacultyAssignments(faData || []);
-		})();
-	}, [activeSession, schoolId]);
+	useEffect(() => { if (user?.school_id) fetchCoreData(); }, [user?.school_id, fetchCoreData]);
 
 	// ── Fetch template ──
 	const fetchTemplate = useCallback(async () => {

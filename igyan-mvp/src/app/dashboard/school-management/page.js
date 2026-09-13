@@ -40,27 +40,53 @@ export default function SchoolManagementPage() {
 		}
 	}, [user, authLoading, router]);
 
-	const fetchSchool = useCallback(async () => {
+	const fetchAllSchoolData = useCallback(async () => {
 		if (!user?.school_id) { setPageLoading(false); return; }
+		const sId = user.school_id;
+		setSchoolId(sId);
+
 		try {
-			const { data } = await supabase.from("schools").select("*").eq("id", user.school_id).single();
-			if (data) { setSchoolId(data.id); setSchoolData(data); }
-		} catch (err) { console.error(err); }
-		setPageLoading(false);
-	}, [user]);
+			const [schoolRes, sessRes, subjRes, usersRes] = await Promise.all([
+				supabase.from("schools").select("*").eq("id", sId).single(),
+				supabase.from("academic_sessions").select("*").eq("school_id", sId).order("start_date", { ascending: false }),
+				supabase.from("subjects").select("*").eq("school_id", sId).order("subject_name"),
+				supabase.from("users").select("id, full_name, email, phone, role").eq("school_id", sId).in("role", ["student", "faculty", "parent"]).order("full_name"),
+			]);
 
-	const fetchSessions = useCallback(async () => {
-		if (!schoolId) return;
-		const { data } = await supabase.from("academic_sessions").select("*").eq("school_id", schoolId).order("start_date", { ascending: false });
-		setSessions(data || []);
-		setActiveSession((data || []).find((s) => s.is_active) || null);
-	}, [schoolId]);
+			if (schoolRes.data) {
+				setSchoolData(schoolRes.data);
+			}
 
-	const fetchSubjects = useCallback(async () => {
-		if (!schoolId) return;
-		const { data } = await supabase.from("subjects").select("*").eq("school_id", schoolId).order("subject_name");
-		setSubjects(data || []);
-	}, [schoolId]);
+			const sessList = sessRes.data || [];
+			setSessions(sessList);
+			const currentActive = sessList.find((s) => s.is_active) || null;
+			setActiveSession(currentActive);
+
+			setSubjects(subjRes.data || []);
+
+			const allUsers = usersRes.data || [];
+			const studentList = [];
+			const facultyList = [];
+			const parentList = [];
+			allUsers.forEach((u) => {
+				if (u.role === "student") studentList.push(u);
+				else if (u.role === "faculty") facultyList.push(u);
+				else if (u.role === "parent") parentList.push(u);
+			});
+			setStudents(studentList);
+			setFaculty(facultyList);
+			setParents(parentList);
+
+			if (currentActive) {
+				const { data: clsData } = await supabase.from("classes").select("*").eq("school_id", sId).eq("session_id", currentActive.id).order("class_name");
+				setClasses(clsData || []);
+			}
+		} catch (err) {
+			console.error("Error fetching school data:", err);
+		} finally {
+			setPageLoading(false);
+		}
+	}, [user?.school_id]);
 
 	const fetchClasses = useCallback(async () => {
 		if (!schoolId || !activeSession) return;
@@ -68,29 +94,15 @@ export default function SchoolManagementPage() {
 		setClasses(data || []);
 	}, [schoolId, activeSession]);
 
-	const fetchStudents = useCallback(async () => {
-		if (!schoolId) return;
-		const { data } = await supabase.from("users").select("id, full_name, email, phone").eq("school_id", schoolId).eq("role", "student").order("full_name");
-		setStudents(data || []);
-	}, [schoolId]);
+	useEffect(() => {
+		if (user?.school_id) {
+			fetchAllSchoolData();
+		}
+	}, [user?.school_id, fetchAllSchoolData]);
 
-	const fetchFaculty = useCallback(async () => {
-		if (!schoolId) return;
-		const { data } = await supabase.from("users").select("id, full_name, email, phone").eq("school_id", schoolId).eq("role", "faculty").order("full_name");
-		setFaculty(data || []);
-	}, [schoolId]);
-
-	const fetchParents = useCallback(async () => {
-		if (!schoolId) return;
-		const { data } = await supabase.from("users").select("id, full_name, email, phone").eq("school_id", schoolId).eq("role", "parent").order("full_name");
-		setParents(data || []);
-	}, [schoolId]);
-
-	useEffect(() => { if (user) fetchSchool(); }, [user, fetchSchool]);
-	useEffect(() => { if (schoolId) { fetchSessions(); fetchSubjects(); fetchStudents(); fetchFaculty(); fetchParents(); } }, [schoolId, fetchSessions, fetchSubjects, fetchStudents, fetchFaculty, fetchParents]);
-	useEffect(() => { if (activeSession) fetchClasses(); }, [activeSession, fetchClasses]);
-
-	const refreshAll = () => { fetchSessions(); fetchSubjects(); fetchClasses(); fetchStudents(); fetchFaculty(); fetchParents(); };
+	const refreshAll = () => {
+		fetchAllSchoolData();
+	};
 
 	if (authLoading || pageLoading) {
 		return (

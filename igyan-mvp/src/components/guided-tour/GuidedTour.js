@@ -13,9 +13,14 @@ const PAGE_TOUR_STORAGE_PREFIX = "igyan-page-tour-v2-";
  *  Supports dashboard tour + page-specific tours
  * ───────────────────────────────────────────────── */
 export default function GuidedTour({ userRole, userId }) {
+	const [mounted, setMounted] = useState(false);
 	const pathname = usePathname();
 	const dashboardSteps = getTourSteps(userRole);
 	const pageSteps = getPageTourSteps(pathname);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	// Determine which tour to show
 	const [tourMode, setTourMode] = useState(null); // "dashboard" | "page" | null
@@ -191,6 +196,8 @@ export default function GuidedTour({ userRole, userId }) {
 		setCurrentStep(0);
 		setIsActive(true);
 	};
+
+	if (!mounted) return null;
 
 	// ── Floating restart button ──────────────────────────────────
 	if (!isActive) {

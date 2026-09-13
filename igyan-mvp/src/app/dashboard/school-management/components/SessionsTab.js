@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { supabase } from "../../../utils/supabase";
+import DatePicker from "../../../../components/ui/DatePicker";
 import { Modal, Badge, inputClass, labelClass, cardClass, btnPrimary, btnSecondary, btnDanger, btnGhost, thClass, tdClass, tdBold, emptyClass, alertError } from "./shared";
 
 export default function SessionsTab({ schoolId, sessions, onRefresh }) {
@@ -108,11 +109,21 @@ export default function SessionsTab({ schoolId, sessions, onRefresh }) {
 					<div className="grid grid-cols-2 gap-4">
 						<div>
 							<label className={labelClass}>Start Date <span className="text-red-500">*</span></label>
-							<input type="date" value={form.start_date} onChange={(e) => setForm({ ...form, start_date: e.target.value })} className={inputClass} required />
+							<DatePicker
+								required
+								value={form.start_date}
+								onChange={(val) => setForm({ ...form, start_date: val })}
+								placeholder="dd/mm/yyyy"
+							/>
 						</div>
 						<div>
 							<label className={labelClass}>End Date <span className="text-red-500">*</span></label>
-							<input type="date" value={form.end_date} onChange={(e) => setForm({ ...form, end_date: e.target.value })} className={inputClass} required />
+							<DatePicker
+								required
+								value={form.end_date}
+								onChange={(val) => setForm({ ...form, end_date: val })}
+								placeholder="dd/mm/yyyy"
+							/>
 						</div>
 					</div>
 					<div className="flex justify-end gap-3 border-t border-zinc-200 pt-4 dark:border-zinc-800">

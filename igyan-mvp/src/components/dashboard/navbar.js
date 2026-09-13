@@ -185,7 +185,7 @@ export default function DashboardNavbar({ onMenuClick, schoolData }) {
 					<div className="hidden items-center md:flex">
 						<div className="relative">
 							<Search className="absolute left-3 top-1/2 h-5 w-5 -translate-y-1/2" style={{ color: 'var(--dashboard-muted)' }} />
-							<input type="text" placeholder="Search anything..." className="dashboard-search dashboard-tools-search text-base transition-all focus:outline-none focus:ring-2" style={{ color: 'var(--dashboard-text)', '--tw-ring-color': 'color-mix(in srgb, var(--dashboard-primary) 30%, transparent)' }} />
+							<input id="dashboard-search" name="search" aria-label="Search anything" type="text" placeholder="Search anything..." className="dashboard-search dashboard-tools-search text-base transition-all focus:outline-none focus:ring-2" style={{ color: 'var(--dashboard-text)', '--tw-ring-color': 'color-mix(in srgb, var(--dashboard-primary) 30%, transparent)' }} />
 						</div>
 					</div>
 					{canSeeAchievements && (
@@ -283,6 +283,8 @@ export default function DashboardNavbar({ onMenuClick, schoolData }) {
 																<img 
 																	src={otherUser.image_base64} 
 																	alt={otherUser.full_name}
+																	width={40}
+																	height={40}
 																	loading="lazy"
 																	decoding="async"
 																	className="h-full w-full object-cover"
@@ -357,6 +359,8 @@ export default function DashboardNavbar({ onMenuClick, schoolData }) {
 								<img
 									src={user.image_base64}
 									alt={user?.full_name || "User"}
+									width={36}
+									height={36}
 									loading="lazy"
 									decoding="async"
 									className="h-9 w-9 rounded-full object-cover ring-2 ring-offset-2 ring-indigo-500/30 dark:ring-offset-zinc-900"
@@ -417,6 +421,8 @@ export default function DashboardNavbar({ onMenuClick, schoolData }) {
 											<img
 												src={user.image_base64}
 												alt={user?.full_name || "User"}
+												width={48}
+												height={48}
 												loading="lazy"
 												decoding="async"
 												className={`h-12 w-12 rounded-full object-cover ring-2 ring-offset-2 ${

@@ -6,7 +6,6 @@ import { useAuth } from "../utils/auth_context";
 import { supabase } from "../utils/supabase";
 import DashboardNavbar from "../../components/dashboard/navbar";
 import UnifiedSidenav from "../../components/dashboard/unified-sidenav";
-import GuidedTour from "../../components/guided-tour/GuidedTour";
 import RouteSkeleton from "../components/RouteSkeleton";
 
 const THEME_STORAGE_KEY = "dashboard-theme";
@@ -15,7 +14,12 @@ export default function DashboardLayout({ children }) {
 	const [isSidenavOpen, setIsSidenavOpen] = useState(false);
 	const [isCollapsed, setIsCollapsed] = useState(false);
 	const [schoolData, setSchoolData] = useState(null);
-	const [activeTheme, setActiveTheme] = useState("indigo");
+	const [activeTheme, setActiveTheme] = useState(() => {
+		if (typeof window !== "undefined") {
+			return window.localStorage.getItem(THEME_STORAGE_KEY) || "indigo";
+		}
+		return "indigo";
+	});
 	const [showSchoolPopup, setShowSchoolPopup] = useState(false);
 	const { user, logout, loading } = useAuth();
 	const pathname = usePathname();
@@ -35,17 +39,11 @@ export default function DashboardLayout({ children }) {
 		}
 	}, [user, logout]);
 
-	// Restore theme preference on mount
+	// Set dataset on mount
 	useEffect(() => {
 		if (typeof window === "undefined") return;
-		const savedTheme = window.localStorage.getItem(THEME_STORAGE_KEY);
-		if (savedTheme) {
-			setActiveTheme(savedTheme);
-			document.body.dataset.dashboardTheme = savedTheme;
-		} else {
-			document.body.dataset.dashboardTheme = "indigo";
-		}
-	}, []);
+		document.body.dataset.dashboardTheme = activeTheme;
+	}, [activeTheme]);
 
 	// Listen for theme change events dispatched from settings page
 	useEffect(() => {
@@ -88,6 +86,16 @@ export default function DashboardLayout({ children }) {
 				return;
 			}
 
+			// Fast cache lookup
+			const cacheKey = user.school_id ? `cached_school_${user.school_id}` : `cached_school_creator_${user.id}`;
+			try {
+				const cached = sessionStorage.getItem(cacheKey);
+				if (cached) {
+					setSchoolData(JSON.parse(cached));
+					return;
+				}
+			} catch (e) {}
+
 			try {
 				// First check if user has a school_id
 				if (user.school_id) {
@@ -105,6 +113,7 @@ export default function DashboardLayout({ children }) {
 
 					if (data) {
 						setSchoolData(data);
+						try { sessionStorage.setItem(cacheKey, JSON.stringify(data)); } catch (e) {}
 					}
 				} else {
 					// Fallback: Check if user created a school
@@ -121,6 +130,7 @@ export default function DashboardLayout({ children }) {
 
 					if (data) {
 						setSchoolData(data);
+						try { sessionStorage.setItem(cacheKey, JSON.stringify(data)); } catch (e) {}
 					}
 				}
 			} catch (err) {
@@ -129,7 +139,7 @@ export default function DashboardLayout({ children }) {
 		};
 
 		fetchSchoolData();
-	}, [user]);
+	}, [user?.id, user?.school_id, user?.role]);
 
 	// Show school registration popup for super_admin without a school
 	// Don't show if user is already on the school-profile page
@@ -139,8 +149,6 @@ export default function DashboardLayout({ children }) {
 		if (user.role === "super_admin" && !user.school_id && !schoolData && !isOnSchoolProfile) {
 			const timer = setTimeout(() => setShowSchoolPopup(true), 800);
 			return () => clearTimeout(timer);
-		} else {
-			setShowSchoolPopup(false);
 		}
 	}, [user, schoolData, pathname]);
 
@@ -150,8 +158,6 @@ export default function DashboardLayout({ children }) {
 
 	return (
 		<div className="dashboard-theme flex h-screen overflow-hidden">
-			{/* Guided Product Tour */}
-			{user && <GuidedTour userRole={user.role} userId={user.id} />}
 
 			{/* School Onboarding Popup for Super Admin */}
 			{showSchoolPopup && (

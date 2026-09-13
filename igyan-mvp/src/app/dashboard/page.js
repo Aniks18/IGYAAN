@@ -20,8 +20,8 @@ import SuperAdminDashboard from "../../components/dashboard/superadmin-dashboard
 export default function DashboardPage() {
 	const { user, session, loading } = useAuth();
 	const router = useRouter();
-	const [hasSchool, setHasSchool] = useState(null);
-	const [checkingSchool, setCheckingSchool] = useState(true);
+	const [hasSchool, setHasSchool] = useState(() => user?.school_id ? true : null);
+	const [checkingSchool, setCheckingSchool] = useState(() => !user || !user?.school_id);
 
 	useEffect(() => {
 		if (!loading && !user) {
@@ -29,21 +29,33 @@ export default function DashboardPage() {
 		}
 	}, [user, loading, router]);
 
-	// Check if user has a school (only for institutional users)
+	// Check if user has a school (only for institutional users without school_id)
 	useEffect(() => {
 		const checkSchool = async () => {
 			if (!user) return;
 
+			if (user.school_id) {
+				setHasSchool(true);
+				setCheckingSchool(false);
+				return;
+			}
+
 			// B2C users don't need school onboarding
 			const LAUNCH_PAD_ROLES = ['b2c_student', 'b2c_mentor'];
 			if (LAUNCH_PAD_ROLES.includes(user.role)) {
-				setHasSchool(true); // Skip school check for B2C users
+				setHasSchool(true);
+				setCheckingSchool(false);
+				return;
+			}
+
+			// Super admins, co-admins, and faculty render their dedicated dashboards directly
+			if (user.role === "super_admin" || user.role === "co_admin" || user.role === "faculty") {
+				setHasSchool(true);
 				setCheckingSchool(false);
 				return;
 			}
 
 			try {
-				// Check if user has created a school
 				const { data, error } = await supabase
 					.from("schools")
 					.select("id")
@@ -55,9 +67,9 @@ export default function DashboardPage() {
 				}
 
 				setHasSchool(!!data);
-				setCheckingSchool(false);
 			} catch (err) {
 				console.error("Error checking school:", err);
+			} finally {
 				setCheckingSchool(false);
 			}
 		};

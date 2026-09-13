@@ -4,6 +4,7 @@ import { useEffect, useState, useMemo, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../utils/auth_context";
 import { supabase } from "../../utils/supabase";
+import DatePicker from "../../../components/ui/DatePicker";
 import * as XLSX from "xlsx";
 import {
 	Search,
@@ -24,6 +25,7 @@ import {
 	Download,
 	Calendar as CalendarIcon,
 	ImageIcon,
+	Edit2,
 } from "lucide-react";
 
 const ALLOWED_ROLES = ["super_admin"];
@@ -413,23 +415,24 @@ export default function StudentManagementPage() {
 			const userIds = (studentsData || []).map((u) => u.id);
 
 			let enrollments = [];
-			if (userIds.length > 0 && session) {
-				const { data: eData } = await supabase
-					.from("class_students")
-					.select("student_id, class_id, roll_number, classes(id, class_name, section)")
-					.in("student_id", userIds)
-					.eq("session_id", session.id)
-					.eq("status", "active");
-				enrollments = eData || [];
-			}
-
 			let profiles = [];
 			if (userIds.length > 0) {
-				const { data: pData } = await supabase
-					.from("student_profiles")
-					.select("*")
-					.in("user_id", userIds);
-				profiles = pData || [];
+				const [enrollmentsRes, profilesRes] = await Promise.all([
+					session
+						? supabase
+								.from("class_students")
+								.select("student_id, class_id, roll_number, classes(id, class_name, section)")
+								.in("student_id", userIds)
+								.eq("session_id", session.id)
+								.eq("status", "active")
+						: Promise.resolve({ data: [] }),
+					supabase
+						.from("student_profiles")
+						.select("*")
+						.in("user_id", userIds)
+				]);
+				enrollments = enrollmentsRes.data || [];
+				profiles = profilesRes.data || [];
 			}
 
 			const merged = (studentsData || []).map((u, i) => {
@@ -889,7 +892,7 @@ export default function StudentManagementPage() {
 								});
 								setError("");
 							}}
-							className="flex items-center gap-1.5 rounded-xl bg-[#ea580c] px-4 py-2 text-xs font-bold text-white shadow-sm transition hover:bg-[#c2410c] hover:shadow-md"
+							className="dashboard-btn-primary flex items-center gap-1.5 rounded-xl px-4 py-2 text-xs font-bold shadow-sm"
 						>
 							<Plus className="h-4 w-4 stroke-[2.5]" />
 							<span>Add Student</span>
@@ -1133,7 +1136,7 @@ export default function StudentManagementPage() {
 												displayStudents.length > 0 &&
 												selectedRowIds.size === displayStudents.length
 											}
-											className="h-4 w-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+											className="dashboard-checkbox h-4 w-4"
 										/>
 									</th>
 									<th className="px-4 py-3.5">Student ID</th>
@@ -1179,7 +1182,7 @@ export default function StudentManagementPage() {
 														type="checkbox"
 														checked={isSelected}
 														onChange={() => handleToggleRow(s.id)}
-														className="h-4 w-4 rounded border-slate-300 text-orange-600 focus:ring-orange-500"
+														className="dashboard-checkbox h-4 w-4"
 													/>
 												</td>
 
@@ -1441,18 +1444,14 @@ export default function StudentManagementPage() {
 											<label className={labelCls}>
 												Date of Birth<span className="text-red-500">*</span>
 											</label>
-											<div className="relative">
-												<input
-													type="date"
-													autoComplete="off"
-													value={candidateForm.dob}
-													onChange={(e) =>
-														setCandidateForm({ ...candidateForm, dob: e.target.value })
-													}
-													className={inputCls}
-													required
-												/>
-											</div>
+											<DatePicker
+												required
+												value={candidateForm.dob}
+												onChange={(val) =>
+													setCandidateForm({ ...candidateForm, dob: val })
+												}
+												placeholder="dd/mm/yyyy"
+											/>
 										</div>
 									</div>
 
@@ -1540,20 +1539,16 @@ export default function StudentManagementPage() {
 										</div>
 										<div>
 											<label className={labelCls}>Admission Date</label>
-											<div className="relative">
-												<input
-													type="date"
-													autoComplete="off"
-													value={candidateForm.admissionDate}
-													onChange={(e) =>
-														setCandidateForm({
-															...candidateForm,
-															admissionDate: e.target.value,
-														})
-													}
-													className={inputCls}
-												/>
-											</div>
+											<DatePicker
+												value={candidateForm.admissionDate}
+												onChange={(val) =>
+													setCandidateForm({
+														...candidateForm,
+														admissionDate: val,
+													})
+												}
+												placeholder="dd/mm/yyyy"
+											/>
 										</div>
 									</div>
 								</div>
@@ -1645,7 +1640,7 @@ export default function StudentManagementPage() {
 									type="submit"
 									form="add-student-form"
 									disabled={saving}
-									className="flex-1 rounded-xl bg-[#ea580c] py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-[#c2410c] disabled:opacity-50"
+									className="dashboard-btn-primary flex-1 rounded-xl py-2.5 text-xs font-bold shadow-sm disabled:opacity-50"
 								>
 									{saving ? "Registering..." : "Register Student"}
 								</button>
@@ -1771,7 +1766,7 @@ export default function StudentManagementPage() {
 									type="button"
 									onClick={handleSaveBulkStudents}
 									disabled={bulkSaving || parsedRows.length === 0}
-									className="rounded-xl bg-[#ea580c] px-4 py-2 text-xs font-bold text-white shadow-sm hover:bg-[#c2410c] disabled:opacity-50"
+									className="dashboard-btn-primary rounded-xl px-4 py-2 text-xs font-bold shadow-sm disabled:opacity-50"
 								>
 									{bulkSaving ? "Importing..." : `Import ${parsedRows.length || ""} Students`}
 								</button>

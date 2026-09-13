@@ -249,7 +249,11 @@ export default function MessagesPage() {
 				</p>
 				<div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
 					<input
+						id="waitlist-email"
+						name="email"
 						type="email"
+						aria-label="Email address for early access waitlist"
+						autoComplete="email"
 						placeholder="Enter your email"
 						className="px-6 py-3 rounded-xl border w-full sm:w-96 focus:outline-none focus:ring-2"
 						style={{
