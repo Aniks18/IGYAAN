@@ -177,6 +177,8 @@ export default function BlogDetailPage() {
           <img
             src={blog.cover_image}
             alt={blog.title}
+            width={1200}
+            height={630}
             loading="lazy"
             decoding="async"
             className="h-auto w-full object-cover"
@@ -234,7 +236,7 @@ export default function BlogDetailPage() {
           <div className="grid gap-4 sm:grid-cols-2">
             {blog.images.map((img, i) => (
               <div key={i} className="overflow-hidden rounded-xl border border-slate-200 dark:border-slate-800">
-                <img src={img} alt={`${blog.title} - image ${i + 1}`} loading="lazy" decoding="async" className="h-auto w-full object-cover" />
+                <img src={img} alt={`${blog.title} - image ${i + 1}`} width={600} height={400} loading="lazy" decoding="async" className="h-auto w-full object-cover" />
               </div>
             ))}
           </div>
@@ -254,7 +256,7 @@ export default function BlogDetailPage() {
               >
                 <div className="h-32 w-full overflow-hidden bg-slate-100 dark:bg-slate-800">
                   {rb.cover_image ? (
-                    <img src={rb.cover_image} alt={rb.title} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
+                    <img src={rb.cover_image} alt={rb.title} width={400} height={200} loading="lazy" decoding="async" className="h-full w-full object-cover transition-transform duration-500 group-hover:scale-105" />
                   ) : (
                     <div className={`flex h-full w-full items-center justify-center ${rb.blog_type === "igyan_blog" ? "bg-gradient-to-br from-sky-500 to-cyan-600" : "bg-gradient-to-br from-indigo-500 to-purple-600"}`}>
                       <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="currentColor" className="h-8 w-8 text-white/70">

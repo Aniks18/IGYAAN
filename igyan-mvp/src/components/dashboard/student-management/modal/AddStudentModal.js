@@ -48,10 +48,12 @@ export default function AddStudentModal({
 				<form onSubmit={onSubmit} className="space-y-4">
 					<div className="grid gap-4 sm:grid-cols-2">
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-regNo" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Registration Number <span className="text-red-500">*</span>
 							</label>
 							<input
+								id="student-regNo"
+								name="regNo"
 								type="text"
 								value={formData.regNo}
 								onChange={(e) =>
@@ -70,10 +72,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-name" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Full Name <span className="text-red-500">*</span>
 							</label>
 							<input
+								id="student-name"
+								name="name"
 								type="text"
 								value={formData.name}
 								onChange={(e) =>
@@ -92,10 +96,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-email" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Email <span className="text-red-500">*</span>
 							</label>
 							<input
+								id="student-email"
+								name="email"
 								type="email"
 								value={formData.email}
 								onChange={(e) =>
@@ -114,11 +120,13 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-password" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Password {!isEditMode && <span className="text-red-500">*</span>}
 								{isEditMode && <span className="text-xs text-zinc-500">(leave empty to keep current)</span>}
 							</label>
 							<input
+								id="student-password"
+								name="password"
 								type="password"
 								value={formData.password}
 								onChange={(e) =>
@@ -137,10 +145,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-class" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Class <span className="text-red-500">*</span>
 							</label>
 							<input
+								id="student-class"
+								name="class"
 								type="text"
 								value={formData.class}
 								onChange={(e) =>
@@ -159,10 +169,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-section" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Section <span className="text-red-500">*</span>
 							</label>
 							<input
+								id="student-section"
+								name="section"
 								type="text"
 								value={formData.section}
 								onChange={(e) =>
@@ -181,10 +193,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-age" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Age
 							</label>
 							<input
+								id="student-age"
+								name="age"
 								type="number"
 								value={formData.age}
 								onChange={(e) =>
@@ -196,10 +210,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-house" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								House
 							</label>
 							<input
+								id="student-house"
+								name="house"
 								type="text"
 								value={formData.house}
 								onChange={(e) =>
@@ -211,10 +227,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-classTeacher" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Class Teacher
 							</label>
 							<input
+								id="student-classTeacher"
+								name="classTeacher"
 								type="text"
 								value={formData.classTeacher}
 								onChange={(e) =>
@@ -226,10 +244,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-sleepTime" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Sleep Time
 							</label>
 							<input
+								id="student-sleepTime"
+								name="sleepTime"
 								type="text"
 								value={formData.sleepTime}
 								onChange={(e) =>
@@ -241,10 +261,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-weekday-schedule" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Study Schedule (Weekday)
 							</label>
 							<input
+								id="student-weekday-schedule"
+								name="studyScheduleWeekday"
 								type="text"
 								value={formData.studyScheduleWeekday}
 								onChange={(e) =>
@@ -256,10 +278,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-weekend-schedule" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Study Schedule (Weekend)
 							</label>
 							<input
+								id="student-weekend-schedule"
+								name="studyScheduleWeekend"
 								type="text"
 								value={formData.studyScheduleWeekend}
 								onChange={(e) =>
@@ -271,10 +295,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-schoolBoard" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								School Board
 							</label>
 							<input
+								id="student-schoolBoard"
+								name="schoolBoard"
 								type="text"
 								value={formData.schoolBoard}
 								onChange={(e) =>
@@ -286,10 +312,12 @@ export default function AddStudentModal({
 						</div>
 
 						<div>
-							<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+							<label htmlFor="student-learningStyle" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 								Learning Style
 							</label>
 							<input
+								id="student-learningStyle"
+								name="learningStyle"
 								type="text"
 								value={formData.learningStyle}
 								onChange={(e) =>
@@ -305,10 +333,12 @@ export default function AddStudentModal({
 						<h3 className="text-lg font-semibold text-zinc-900 dark:text-white">Additional Information</h3>
 						<div className="grid gap-4 sm:grid-cols-2">
 							<div className="sm:col-span-2">
-								<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+								<label htmlFor="student-interests" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 									Interests <span className="text-xs text-zinc-500">(comma separated)</span>
 								</label>
 								<input
+									id="student-interests"
+									name="interests"
 									type="text"
 									value={formData.interests}
 									onChange={(e) =>
@@ -320,10 +350,12 @@ export default function AddStudentModal({
 							</div>
 
 							<div className="sm:col-span-2">
-								<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+								<label htmlFor="student-strengths" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 									Strengths <span className="text-xs text-zinc-500">(comma separated)</span>
 								</label>
 								<input
+									id="student-strengths"
+									name="strengths"
 									type="text"
 									value={formData.strengths}
 									onChange={(e) =>
@@ -335,10 +367,12 @@ export default function AddStudentModal({
 							</div>
 
 							<div className="sm:col-span-2">
-								<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+								<label htmlFor="student-growthAreas" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 									Growth Areas <span className="text-xs text-zinc-500">(comma separated)</span>
 								</label>
 								<input
+									id="student-growthAreas"
+									name="growthAreas"
 									type="text"
 									value={formData.growthAreas}
 									onChange={(e) =>
@@ -350,10 +384,12 @@ export default function AddStudentModal({
 							</div>
 
 							<div className="sm:col-span-2">
-								<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+								<label htmlFor="student-academicGoals" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 									Academic Goals <span className="text-xs text-zinc-500">(comma separated)</span>
 								</label>
 								<input
+									id="student-academicGoals"
+									name="academicGoals"
 									type="text"
 									value={formData.academicGoals}
 									onChange={(e) =>
@@ -365,10 +401,12 @@ export default function AddStudentModal({
 							</div>
 
 							<div className="sm:col-span-2">
-								<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+								<label htmlFor="student-favoriteSubjects" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 									Favorite Subjects <span className="text-xs text-zinc-500">(comma separated)</span>
 								</label>
 								<input
+									id="student-favoriteSubjects"
+									name="favoriteSubjects"
 									type="text"
 									value={formData.favoriteSubjects}
 									onChange={(e) =>
@@ -380,10 +418,12 @@ export default function AddStudentModal({
 							</div>
 
 							<div className="sm:col-span-2">
-								<label className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
+								<label htmlFor="student-funFact" className="mb-2 block text-sm font-medium text-zinc-700 dark:text-zinc-300">
 									Fun Fact
 								</label>
 								<textarea
+									id="student-funFact"
+									name="funFact"
 									value={formData.funFact}
 									onChange={(e) =>
 										setFormData({ ...formData, funFact: e.target.value })

@@ -5,10 +5,26 @@ import { useRouter } from "next/navigation";
 import Link from "next/link";
 import { useAuth } from "../../utils/auth_context";
 import { supabase } from "../../utils/supabase";
+import {
+	User,
+	Building2,
+	Shield,
+	Sliders,
+	HelpCircle,
+	ChevronRight,
+	Sparkles,
+	Check,
+} from "lucide-react";
 
 const THEME_STORAGE_KEY = "dashboard-theme";
 
 const themeOptions = [
+	{
+		id: "sunset",
+		label: "Sunset Ember",
+		description: "Warm orange theme that brings energy and enthusiasm",
+		preview: ["#9a3412", "#ea580c", "#fed7aa"],
+	},
 	{
 		id: "indigo",
 		label: "Aurora Indigo",
@@ -25,34 +41,42 @@ const themeOptions = [
 		id: "ocean",
 		label: "Celestial Ocean",
 		description: "Balanced teal theme inspired by peaceful coastal waters",
-		preview: ["#0f766e", "#14b8a6", "#99f6e4"],
+		preview: ["#0369a1", "#0284c7", "#bae6fd"],
 	},
 	{
-		id: "sunset",
-		label: "Sunset Ember",
-		description: "Warm orange theme that brings energy and enthusiasm",
-		preview: ["#9a3412", "#f97316", "#fed7aa"],
+		id: "amethyst",
+		label: "Royal Amethyst",
+		description: "Refined purple orchid delivering a high-end executive feel",
+		preview: ["#6b21a8", "#9333ea", "#f3e8ff"],
 	},
 	{
 		id: "midnight",
 		label: "Midnight Neon",
 		description: "Dark theme with high contrast, ideal for extended sessions",
-		preview: ["#0a0f1e", "#38bdf8", "#cbd5f5"],
+		preview: ["#090d16", "#38bdf8", "#cbd5f5"],
 	},
 ];
 
-const quickThemeIds = ["indigo", "emerald", "ocean", "sunset", "midnight"];
+const quickThemeIds = ["sunset", "indigo", "emerald", "ocean", "amethyst", "midnight"];
 
 export default function SettingsPage() {
 	const { user, loading } = useAuth();
 	const router = useRouter();
 	const [schoolData, setSchoolData] = useState(null);
 	const [loadingSchool, setLoadingSchool] = useState(true);
-	const [selectedTheme, setSelectedTheme] = useState("indigo");
+	const [selectedTheme, setSelectedTheme] = useState("sunset");
+	const [origin, setOrigin] = useState("");
+
 	const themeLookup = useMemo(
 		() => Object.fromEntries(themeOptions.map((option) => [option.id, option])),
 		[]
 	);
+
+	useEffect(() => {
+		if (typeof window !== "undefined") {
+			setOrigin(window.location.origin);
+		}
+	}, []);
 
 	useEffect(() => {
 		if (!loading && !user) {
@@ -73,19 +97,24 @@ export default function SettingsPage() {
 			if (!user?.id) return;
 
 			try {
-				// Check if user has school_id
 				if (!user.school_id) {
-					console.warn("User does not have school_id:", user.id);
+					// Fallback: Check if user created a school
+					const { data: createdSchool } = await supabase
+						.from("schools")
+						.select("id, school_name, logo_url")
+						.eq("created_by", user.id)
+						.maybeSingle();
+
+					if (createdSchool) {
+						setSchoolData(createdSchool);
+					}
 					setLoadingSchool(false);
 					return;
 				}
 
-				console.log("Fetching school data for school_id:", user.school_id);
-
-				// Fetch school by user's school_id
 				const { data, error } = await supabase
 					.from("schools")
-					.select("id, school_name")
+					.select("id, school_name, logo_url")
 					.eq("id", user.school_id)
 					.maybeSingle();
 
@@ -115,19 +144,19 @@ export default function SettingsPage() {
 		window.dispatchEvent(new CustomEvent("dashboard-theme-change", { detail: themeId }));
 	};
 
-	const activeTheme = themeLookup[selectedTheme] || themeLookup.indigo;
+	const activeTheme = themeLookup[selectedTheme] || themeLookup.sunset;
 	const palette = activeTheme?.preview || [];
-	const toneDeep = palette[0] || "#312e81";
-	const toneMain = palette[1] || palette[0] || "#4f46e5";
-	const toneSoft = palette[2] || palette[1] || "#c7d2fe";
+	const toneDeep = palette[0] || "#9a3412";
+	const toneMain = palette[1] || palette[0] || "#ea580c";
+	const toneSoft = palette[2] || palette[1] || "#fed7aa";
 
 	if (loading || loadingSchool) {
 		return (
-			<div className="flex min-h-screen items-center justify-center">
+			<div className="flex min-h-screen items-center justify-center bg-[#f8fafc]">
 				<div className="text-center">
-					<div className="mx-auto h-12 w-12 animate-spin rounded-full border-4 border-indigo-500 border-t-transparent"></div>
-					<p className="mt-4 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
-						Loading settings...
+					<div className="mx-auto h-10 w-10 animate-spin rounded-full border-3 border-orange-500 border-t-transparent" />
+					<p className="mt-4 text-xs font-semibold text-slate-500">
+						Loading Settings...
 					</p>
 				</div>
 			</div>
@@ -137,542 +166,455 @@ export default function SettingsPage() {
 	if (!user) return null;
 
 	return (
-		<div className="p-6 lg:p-8">
-			{/* Header */}
-			<div data-tour="settings-header" className="mb-8">
-				<h1 className="text-3xl font-bold" style={{ color: 'var(--dashboard-heading)' }}>
-					Settings
-				</h1>
-				<p className="mt-2" style={{ color: 'var(--dashboard-muted)' }}>
-					Manage your account and organization settings
-				</p>
-			</div>
+		<div className="min-h-full bg-[#f8fafc] p-4 text-[#1e293b] sm:p-6 lg:p-7">
+			<div className="mx-auto max-w-[1520px] space-y-6">
+				{/* ── Page Header ── */}
+				<div data-tour="settings-header">
+					<div className="flex items-center gap-2 text-xs font-semibold text-slate-500 mb-1">
+						<span className="hover:text-slate-800 transition-colors">
+							System & Users
+						</span>
+						<span>•</span>
+						<span className="text-[#ea580c]" style={{ color: toneMain }}>
+							Settings
+						</span>
+					</div>
+					<h1 className="text-2xl font-extrabold tracking-tight text-[#0f172a] sm:text-3xl">
+						Settings
+					</h1>
+					<p className="mt-1 text-xs font-medium text-slate-500">
+						Manage your account and organization settings
+					</p>
+				</div>
 
-			{/* Appearance Studio */}
-			<div data-tour="settings-appearance" className="dashboard-card mb-8 rounded-3xl border p-6 shadow-sm" style={{ borderColor: 'var(--dashboard-border)' }}>
-				<div className="grid gap-8 lg:grid-cols-[340px,1fr]">
-					<div className="flex flex-col gap-6">
-						<div>
-							<span className="dashboard-pill inline-flex items-center rounded-full border px-3 py-1 text-xs font-semibold uppercase tracking-wide">
-								Appearance Studio
-							</span>
-							<h2 className="mt-4 text-2xl font-semibold" style={{ color: 'var(--dashboard-heading)' }}>
-								Curate the perfect look for your dashboard
-							</h2>
-							<p className="mt-2 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
-								Themes update navigation, cards, chips, and buttons instantly for everyone in your workspace.
-							</p>
-						</div>
-
-						<div className="overflow-hidden rounded-3xl border border-white/60 bg-white/70 shadow-inner backdrop-blur">
-							<div
-								className="rounded-3xl p-5"
-								style={{
-									background: `linear-gradient(135deg, ${toneSoft}, rgba(255,255,255,0.92))`,
-								}}
-							>
-								<div
-									className="rounded-2xl border border-white/60 p-4 shadow-sm backdrop-blur"
-									style={{ background: "rgba(255,255,255,0.65)" }}
+				{/* ── Appearance Studio ── */}
+				<div
+					data-tour="settings-appearance"
+					className="dashboard-card rounded-3xl border border-slate-200/90 bg-white p-6 shadow-sm"
+				>
+					<div className="grid gap-8 lg:grid-cols-[380px,1fr]">
+						{/* Left: Appearance Studio details & live preview */}
+						<div className="flex flex-col gap-6">
+							<div>
+								<span
+									className="dashboard-pill inline-flex items-center gap-1.5 rounded-full px-3 py-1 text-xs font-bold uppercase tracking-wider"
+									style={{
+										backgroundColor: "color-mix(in srgb, var(--dashboard-primary) 12%, transparent)",
+										color: toneMain,
+										borderColor: "color-mix(in srgb, var(--dashboard-primary) 20%, transparent)",
+									}}
 								>
-									<div className="flex items-center justify-between gap-4">
-										<div className="flex items-center gap-3">
-											<span
-												className="h-9 w-9 rounded-2xl shadow-sm"
+									<Sparkles className="h-3.5 w-3.5" />
+									Appearance Studio
+								</span>
+								<h2 className="mt-3 text-2xl font-extrabold text-[#0f172a]">
+									Curate the perfect look for your dashboard
+								</h2>
+								<p className="mt-1.5 text-xs text-slate-500 leading-relaxed">
+									Themes update navigation, cards, chips, and buttons instantly for everyone in your workspace.
+								</p>
+							</div>
+
+							{/* Live preview container */}
+							<div className="overflow-hidden rounded-3xl border border-slate-200/70 bg-slate-50/70 shadow-inner backdrop-blur">
+								<div
+									className="rounded-3xl p-5"
+									style={{
+										background: `linear-gradient(135deg, ${toneSoft}33, rgba(255,255,255,0.92))`,
+									}}
+								>
+									<div
+										className="rounded-2xl border border-white/80 p-4 shadow-sm backdrop-blur bg-white/80"
+									>
+										<div className="flex items-center justify-between gap-4">
+											<div className="flex items-center gap-3">
+												<span
+													className="h-9 w-9 rounded-2xl shadow-sm"
+													style={{
+														background: `linear-gradient(135deg, ${toneDeep}, ${toneMain})`,
+													}}
+												/>
+												<div>
+													<p className="text-sm font-bold text-slate-900">Top Navbar</p>
+													<p className="text-xs text-slate-500">Frosted with quick actions</p>
+												</div>
+											</div>
+											<button
+												type="button"
+												className="rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wider shadow-sm transition-transform hover:-translate-y-0.5"
 												style={{
-													background: `linear-gradient(135deg, ${toneDeep}, ${toneMain})`,
+													background: toneMain,
+													color: "#ffffff",
+													boxShadow: `0 12px 30px -18px ${toneMain}aa`,
 												}}
-											/>
-											<div>
-												<p className="text-sm font-semibold text-zinc-900">Top Navbar</p>
-												<p className="text-xs text-zinc-500">Frosted with quick actions</p>
+											>
+												Primary CTA
+											</button>
+										</div>
+
+										<div className="mt-5 grid gap-3 sm:grid-cols-2">
+											<div
+												className="rounded-xl border border-white/90 p-3 shadow-2xs bg-white/90"
+											>
+												<p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+													Overview
+												</p>
+												<div
+													className="mt-3 h-2 rounded-full"
+													style={{ background: toneDeep, opacity: 0.9 }}
+												/>
+												<div
+													className="mt-2 h-2 rounded-full"
+													style={{ background: toneMain, opacity: 0.7 }}
+												/>
+											</div>
+											<div
+												className="rounded-xl border border-white/90 p-3 shadow-2xs bg-white/90"
+											>
+												<p className="text-xs font-semibold uppercase tracking-wider text-slate-500">
+													Progress
+												</p>
+												<div
+													className="mt-3 h-2 rounded-full"
+													style={{ background: toneMain, opacity: 0.85 }}
+												/>
+												<div
+													className="mt-2 h-2 rounded-full"
+													style={{ background: toneSoft, opacity: 0.8 }}
+												/>
 											</div>
 										</div>
-										<button
-											type="button"
-											className="rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide shadow-sm transition-transform hover:-translate-y-0.5"
-											style={{
-												background: toneMain,
-												color: "#ffffff",
-												boxShadow: `0 12px 30px -18px ${toneMain}aa`,
-											}}
-										>
-											Primary CTA
-										</button>
 									</div>
+								</div>
+							</div>
 
-									<div className="mt-5 grid gap-3 sm:grid-cols-2">
-										<div
-											className="rounded-xl border border-white/60 p-3 shadow-sm"
-											style={{ background: "rgba(255,255,255,0.75)" }}
-										>
-											<p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Overview</p>
-											<div
-												className="mt-3 h-2 rounded-full"
-												style={{ background: toneDeep, opacity: 0.9 }}
-											/>
-											<div
-												className="mt-2 h-2 rounded-full"
-												style={{ background: toneMain, opacity: 0.7 }}
-											/>
-										</div>
-										<div
-											className="rounded-xl border border-white/70 p-3 shadow-sm"
-											style={{ background: "rgba(255,255,255,0.8)" }}
-										>
-											<p className="text-xs font-semibold uppercase tracking-wide text-zinc-500">Progress</p>
-											<div
-												className="mt-3 h-2 rounded-full"
-												style={{ background: toneMain, opacity: 0.85 }}
-											/>
-											<div
-												className="mt-2 h-2 rounded-full"
-												style={{ background: toneSoft, opacity: 0.8 }}
-											/>
-										</div>
-									</div>
+							{/* Quick Presets */}
+							<div>
+								<p className="text-xs font-bold uppercase tracking-wider text-slate-400">
+									Quick presets
+								</p>
+								<div className="mt-2.5 flex flex-wrap gap-2">
+									{quickThemeIds.map((id) => {
+										const preset = themeLookup[id];
+										if (!preset) return null;
+										const swatches = preset.preview || [];
+										const deep = swatches[0] || toneDeep;
+										const main = swatches[1] || deep;
+										const soft = swatches[2] || main;
+										const isActive = id === selectedTheme;
+										return (
+											<button
+												type="button"
+												key={id}
+												onClick={() => handleThemeSelect(id)}
+												className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-bold uppercase tracking-wide text-white shadow-sm transition-all hover:-translate-y-0.5 focus-visible:outline-none ${
+													isActive ? "scale-105 ring-2 ring-offset-2 ring-slate-900" : "opacity-90 hover:opacity-100"
+												}`}
+												style={{
+													background: `linear-gradient(135deg, ${deep}, ${main})`,
+													boxShadow: isActive
+														? `0 18px 38px -22px ${main}aa`
+														: "0 10px 28px -24px rgba(15,23,42,0.35)",
+													border: `1px solid ${isActive ? soft : "rgba(255,255,255,0.25)"}`,
+												}}
+											>
+												<span
+													className="h-2.5 w-2.5 rounded-full border border-white/60"
+													style={{ background: soft }}
+												/>
+												<span>{preset.label.split(" ")[0]}</span>
+												{isActive && <Check className="h-3 w-3 stroke-[3]" />}
+											</button>
+										);
+									})}
 								</div>
 							</div>
 						</div>
 
-						<div>
-							<p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--dashboard-muted)' }}>Quick presets</p>
-							<div className="mt-3 flex flex-wrap gap-2">
-								{quickThemeIds.map((id) => {
-									const preset = themeLookup[id];
-									if (!preset) return null;
-									const swatches = preset.preview || [];
-									const deep = swatches[0] || toneDeep;
-									const main = swatches[1] || deep;
-									const soft = swatches[2] || main;
-									const isActive = id === selectedTheme;
-									return (
-										<button
-											type="button"
-											key={id}
-											onClick={() => handleThemeSelect(id)}
-											className={`flex items-center gap-2 rounded-full px-4 py-2 text-xs font-semibold uppercase tracking-wide text-white shadow-sm transition-all hover:-translate-y-0.5 focus-visible:outline-none ${
-												isActive ? "scale-105" : ""
-											}`}
-											style={{
-												background: `linear-gradient(135deg, ${deep}, ${main})`,
-												boxShadow: isActive
-													? `0 18px 38px -22px ${main}aa`
-													: "0 10px 28px -24px rgba(15,23,42,0.35)",
-												border: `1px solid ${isActive ? soft : "rgba(255,255,255,0.25)"}`,
-											}}
-										>
-											<span
-												className="h-2.5 w-2.5 rounded-full border border-white/60"
-												style={{ background: soft }}
-											/>
-											{preset.label.split(" ")[0]}
-										</button>
-									);
-								})}
-							</div>
+						{/* Right: Theme Options Grid */}
+						<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+							{themeOptions.map((option) => {
+								const isActive = option.id === selectedTheme;
+								const accent = option.preview[1] ?? option.preview[0];
+								return (
+									<button
+										type="button"
+										key={option.id}
+										onClick={() => handleThemeSelect(option.id)}
+										className={`group flex h-full flex-col justify-between rounded-2xl border p-5 text-left shadow-2xs transition-all duration-200 hover:-translate-y-1 hover:shadow-md focus-visible:outline-none bg-white ${
+											isActive ? "shadow-md ring-1 ring-slate-900/5" : "hover:border-slate-300"
+										}`}
+										style={
+											isActive
+												? {
+														borderColor: accent,
+														boxShadow: `0 16px 36px -16px ${accent}55`,
+												  }
+												: { borderColor: "rgba(226, 232, 240, 0.9)" }
+										}
+									>
+										<div>
+											<div className="flex items-center justify-between gap-3">
+												<span className="text-base font-extrabold text-[#0f172a]">
+													{option.label}
+												</span>
+												{isActive && (
+													<span
+														className="inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-bold text-white shadow-2xs"
+														style={{ background: accent }}
+													>
+														<Check className="h-3 w-3 stroke-[3]" />
+														Active
+													</span>
+												)}
+											</div>
+											<p className="mt-2 text-xs text-slate-500 leading-relaxed">
+												{option.description}
+											</p>
+										</div>
+										<div className="mt-5 flex items-center gap-2 pt-3 border-t border-slate-100">
+											{option.preview.map((tone) => (
+												<span
+													key={`${option.id}-${tone}`}
+													className="h-8 w-8 rounded-xl border border-white/80 shadow-2xs transition-transform group-hover:scale-105"
+													style={{ background: tone }}
+												/>
+											))}
+										</div>
+									</button>
+								);
+							})}
 						</div>
-					</div>
-
-					<div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-						{themeOptions.map((option) => {
-							const isActive = option.id === selectedTheme;
-							const accent = option.preview[1] ?? option.preview[0];
-							return (
-								<button
-									type="button"
-									key={option.id}
-									onClick={() => handleThemeSelect(option.id)}
-									className={`dashboard-card group flex h-full flex-col justify-between rounded-2xl border p-5 text-left shadow-sm transition-all duration-200 hover:-translate-y-1 hover:shadow-lg focus-visible:outline-none ${
-										isActive ? "shadow-lg" : ""
-									}`}
-									style={
-										isActive
-											? {
-												borderColor: accent,
-												boxShadow: `0 20px 45px -20px ${accent}66`,
-											}
-											: { borderColor: 'var(--dashboard-border)' }
-									}
-								>
-									<span className="flex items-center justify-between gap-3">
-										<span className="text-base font-semibold" style={{ color: 'var(--dashboard-heading)' }}>
-											{option.label}
-										</span>
-										{isActive && (
-											<span
-												className="inline-flex items-center rounded-full px-3 py-1 text-xs font-semibold"
-												style={{ background: accent, color: "#ffffff" }}
-											>
-												Active
-											</span>
-										)}
-									</span>
-									<p className="mt-2 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
-										{option.description}
-									</p>
-									<div className="mt-4 flex items-center gap-2">
-										{option.preview.map((tone) => (
-											<span
-												key={`${option.id}-${tone}`}
-												className="h-8 w-8 rounded-xl border border-white/70 shadow-sm"
-												style={{ background: tone }}
-											/>
-										))}
-									</div>
-								</button>
-							);
-						})}
 					</div>
 				</div>
-			</div>
 
-			{/* Settings Cards Grid */}
-			<div data-tour="settings-cards" className="grid gap-6 lg:grid-cols-2">
-				{/* User Profile Card */}
-				<Link
-					href="/dashboard/profile"
-					className="group dashboard-card rounded-2xl border p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
-					style={{ borderColor: 'var(--dashboard-border)' }}
-				>
-					<div className="flex items-start gap-4">
-						<div
-							className="rounded-xl p-4 shadow-sm"
-							style={{
-								background: "color-mix(in srgb, var(--dashboard-primary) 18%, transparent)",
-								color: "var(--dashboard-primary)",
-							}}
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="1.5"
-								className="h-8 w-8"
+				{/* ── Settings Navigation Cards Grid (2 Columns) ── */}
+				<div data-tour="settings-cards" className="grid gap-6 lg:grid-cols-2">
+					{/* User Profile Card */}
+					<Link
+						href="/dashboard/profile"
+						className="group rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md hover:border-slate-300"
+					>
+						<div className="flex items-start gap-4">
+							<div
+								className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-2xs transition-transform group-hover:scale-105"
+								style={{
+									background: "color-mix(in srgb, var(--dashboard-primary) 14%, transparent)",
+									color: toneMain,
+								}}
 							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-								/>
-							</svg>
-						</div>
-						<div className="flex-1">
-							<h2 className="text-xl font-semibold" style={{ color: 'var(--dashboard-heading)' }}>
-								User Profile
-							</h2>
-							<p className="mt-2 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
-								Update your personal information, contact details, and profile
-								picture
-							</p>
-							<div className="mt-4 flex items-center gap-3">
-								<div
-									className="flex h-10 w-10 items-center justify-center rounded-full text-sm font-semibold text-white shadow-sm"
-									style={{ background: `linear-gradient(135deg, ${toneDeep}, ${toneMain})` }}
-								>
-									{user.full_name
-										?.split(" ")
-										.map((n) => n[0])
-										.join("")
-										.toUpperCase() || "U"}
-								</div>
-								<div>
-									<p className="text-sm font-medium" style={{ color: 'var(--dashboard-heading)' }}>
-										{user.full_name}
-									</p>
-									<p className="text-xs" style={{ color: 'var(--dashboard-muted)' }}>
-										{user.email}
-									</p>
-								</div>
+								<User className="h-7 w-7" strokeWidth={2.2} />
 							</div>
-						</div>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="1.5"
-							className="h-6 w-6 transition-transform group-hover:translate-x-1"
-							style={{ color: 'var(--dashboard-muted)' }}
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								d="M8.25 4.5l7.5 7.5-7.5 7.5"
-							/>
-						</svg>
-					</div>
-				</Link>
-
-				{/* School Profile Card - Only show for institutional users */}
-				{user?.role !== 'b2c_student' && user?.role !== 'b2c_mentor' && (
-				<Link
-					href="/dashboard/school-profile"
-					className="group dashboard-card rounded-2xl border p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
-					style={{ borderColor: 'var(--dashboard-border)' }}
-				>
-					<div className="flex items-start gap-4">
-						<div
-							className="rounded-xl p-4 shadow-sm"
-							style={{
-								background: "color-mix(in srgb, var(--dashboard-primary) 16%, transparent)",
-								color: "var(--dashboard-primary)",
-							}}
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="1.5"
-								className="h-8 w-8"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="M12 21v-8.25M15.75 21v-8.25M8.25 21v-8.25M3 9l9-6 9 6m-1.5 12V10.332A48.36 48.36 0 0012 9.75c-2.551 0-5.056.2-7.5.582V21M3 21h18M12 6.75h.008v.008H12V6.75z"
-								/>
-							</svg>
-						</div>
-						<div className="flex-1">
-							<h2 className="text-xl font-semibold" style={{ color: 'var(--dashboard-heading)' }}>
-								School Profile
-							</h2>
-							<p className="mt-2 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
-								Manage school information, contact details, documents, and
-								branding
-							</p>
-							{schoolData ? (
+							<div className="flex-1 min-w-0">
+								<h2 className="text-lg font-extrabold text-[#0f172a] group-hover:text-slate-950">
+									User Profile
+								</h2>
+								<p className="mt-1 text-xs text-slate-500 leading-relaxed">
+									Update your personal information, contact details, and profile picture
+								</p>
 								<div className="mt-4 flex items-center gap-3">
 									<div
-										className="flex h-10 w-10 items-center justify-center rounded-lg text-xs font-bold text-white shadow-sm"
+										className="flex h-10 w-10 shrink-0 items-center justify-center rounded-full text-sm font-extrabold text-white shadow-2xs"
 										style={{ background: `linear-gradient(135deg, ${toneDeep}, ${toneMain})` }}
 									>
-										{schoolData.school_name
+										{user.full_name
 											?.split(" ")
 											.map((n) => n[0])
 											.join("")
-											.slice(0, 2)
-											.toUpperCase() || "SC"}
+											.toUpperCase() || "U"}
 									</div>
-									<div>
-										<p className="text-sm font-medium" style={{ color: 'var(--dashboard-heading)' }}>
-											{schoolData.school_name}
+									<div className="min-w-0">
+										<p className="truncate text-xs font-bold text-[#0f172a]">
+											{user.full_name}
 										</p>
-										<p className="text-xs" style={{ color: 'var(--dashboard-muted)' }}>
-											School registered
+										<p className="truncate text-[11px] text-slate-500">
+											{user.email}
 										</p>
 									</div>
 								</div>
-							) : (
-								<p className="mt-4 text-xs" style={{ color: 'var(--dashboard-muted)' }}>
-									No school registered yet
-								</p>
-							)}
-						</div>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="1.5"
-							className="h-6 w-6 transition-transform group-hover:translate-x-1"
-							style={{ color: 'var(--dashboard-muted)' }}
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								d="M8.25 4.5l7.5 7.5-7.5 7.5"
+							</div>
+							<ChevronRight
+								className="h-5 w-5 text-slate-400 shrink-0 transition-transform group-hover:translate-x-1"
+								style={{ color: toneMain }}
 							/>
-						</svg>
-					</div>
-				</Link>
-				)}
-
-				{/* B2C Profile Card - Only show for B2C users */}
-				{(user?.role === 'b2c_student' || user?.role === 'b2c_mentor') && (
-				<Link
-					href="/dashboard/about"
-					className="group dashboard-card rounded-2xl border p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-lg"
-					style={{ borderColor: 'var(--dashboard-border)' }}
-				>
-					<div className="flex items-start gap-4">
-						<div
-							className="rounded-xl p-4 shadow-sm"
-							style={{
-								background: "color-mix(in srgb, var(--dashboard-primary) 16%, transparent)",
-								color: "var(--dashboard-primary)",
-							}}
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="1.5"
-								className="h-8 w-8"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="M19.5 14.25v-2.625a3.375 3.375 0 00-3.375-3.375h-1.5A1.125 1.125 0 0113.5 7.125v-1.5a3.375 3.375 0 00-3.375-3.375H8.25m0 12.75h7.5m-7.5 3H12M10.5 2.25H5.625c-.621 0-1.125.504-1.125 1.125v17.25c0 .621.504 1.125 1.125 1.125h12.75c.621 0 1.125-.504 1.125-1.125V11.25a9 9 0 00-9-9z"
-								/>
-							</svg>
 						</div>
-						<div className="flex-1">
-							<h2 className="text-xl font-semibold" style={{ color: 'var(--dashboard-heading)' }}>
-								Professional Profile
-							</h2>
-							<p className="mt-2 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
-								Manage your professional profile, interests, experience, and achievements
-							</p>
-							<div className="mt-4">
-							<p className="text-xs font-semibold uppercase tracking-wide" style={{ color: 'var(--dashboard-muted)' }}>
-									Public Profile Link
+					</Link>
+
+					{/* School Profile Card - Institutional Users */}
+					{user?.role !== "b2c_student" && user?.role !== "b2c_mentor" && (
+						<Link
+							href="/dashboard/school-profile"
+							className="group rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md hover:border-slate-300"
+						>
+							<div className="flex items-start gap-4">
+								<div
+									className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-2xs transition-transform group-hover:scale-105"
+									style={{
+										background: "color-mix(in srgb, var(--dashboard-primary) 14%, transparent)",
+										color: toneMain,
+									}}
+								>
+									<Building2 className="h-7 w-7" strokeWidth={2.2} />
+								</div>
+								<div className="flex-1 min-w-0">
+									<h2 className="text-lg font-extrabold text-[#0f172a] group-hover:text-slate-950">
+										School Profile
+									</h2>
+									<p className="mt-1 text-xs text-slate-500 leading-relaxed">
+										Manage school information, contact details, documents, and branding
+									</p>
+									{schoolData ? (
+										<div className="mt-4 flex items-center gap-3">
+											<div
+												className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl text-xs font-extrabold text-white shadow-2xs"
+												style={{ background: `linear-gradient(135deg, ${toneDeep}, ${toneMain})` }}
+											>
+												{schoolData.school_name
+													?.split(" ")
+													.map((n) => n[0])
+													.join("")
+													.slice(0, 2)
+													.toUpperCase() || "SC"}
+											</div>
+											<div className="min-w-0">
+												<p className="truncate text-xs font-bold text-[#0f172a]">
+													{schoolData.school_name}
+												</p>
+												<p className="text-[11px] font-semibold text-emerald-600">
+													School registered
+												</p>
+											</div>
+										</div>
+									) : (
+										<p className="mt-4 text-xs font-semibold text-slate-400">
+											No school registered yet
+										</p>
+									)}
+								</div>
+								<ChevronRight
+									className="h-5 w-5 text-slate-400 shrink-0 transition-transform group-hover:translate-x-1"
+									style={{ color: toneMain }}
+								/>
+							</div>
+						</Link>
+					)}
+
+					{/* B2C Profile Card - B2C Users */}
+					{(user?.role === "b2c_student" || user?.role === "b2c_mentor") && (
+						<Link
+							href="/dashboard/about"
+							className="group rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm transition-all hover:-translate-y-1 hover:shadow-md hover:border-slate-300"
+						>
+							<div className="flex items-start gap-4">
+								<div
+									className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-2xs transition-transform group-hover:scale-105"
+									style={{
+										background: "color-mix(in srgb, var(--dashboard-primary) 14%, transparent)",
+										color: toneMain,
+									}}
+								>
+									<User className="h-7 w-7" strokeWidth={2.2} />
+								</div>
+								<div className="flex-1 min-w-0">
+									<h2 className="text-lg font-extrabold text-[#0f172a] group-hover:text-slate-950">
+										Professional Profile
+									</h2>
+									<p className="mt-1 text-xs text-slate-500 leading-relaxed">
+										Manage your professional profile, interests, experience, and achievements
+									</p>
+									<div className="mt-4">
+										<p className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+											Public Profile Link
+										</p>
+										<p className="mt-0.5 text-xs font-mono font-semibold truncate" style={{ color: toneMain }}>
+											{origin ? `${origin}/about/${user.id}` : `/about/${user.id}`}
+										</p>
+									</div>
+								</div>
+								<ChevronRight
+									className="h-5 w-5 text-slate-400 shrink-0 transition-transform group-hover:translate-x-1"
+									style={{ color: toneMain }}
+								/>
+							</div>
+						</Link>
+					)}
+
+					{/* Security Card */}
+					<div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm">
+						<div className="flex items-start gap-4">
+							<div
+								className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-2xs"
+								style={{
+									background: "color-mix(in srgb, var(--dashboard-primary) 14%, transparent)",
+									color: toneMain,
+								}}
+							>
+								<Shield className="h-7 w-7" strokeWidth={2.2} />
+							</div>
+							<div className="flex-1">
+								<h2 className="text-lg font-extrabold text-[#0f172a]">
+									Security
+								</h2>
+								<p className="mt-1 text-xs text-slate-500 leading-relaxed">
+									Change password, enable two-factor authentication, and manage sessions
 								</p>
-								<p className="mt-1 text-xs" style={{ color: 'var(--dashboard-primary)' }}>
-									{typeof window !== 'undefined' ? window.location.origin : ''}/about/{user.id}
-								</p>
+								<span className="mt-4 inline-block rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-500">
+									Coming soon...
+								</span>
 							</div>
 						</div>
-						<svg
-							xmlns="http://www.w3.org/2000/svg"
-							viewBox="0 0 24 24"
-							fill="none"
-							stroke="currentColor"
-							strokeWidth="1.5"
-							className="h-6 w-6 transition-transform group-hover:translate-x-1"
-							style={{ color: 'var(--dashboard-muted)' }}
-						>
-							<path
-								strokeLinecap="round"
-								strokeLinejoin="round"
-								d="M8.25 4.5l7.5 7.5-7.5 7.5"
-							/>
-						</svg>
 					</div>
-				</Link>
-				)}
 
-				{/* Security Card */}
-				<div className="dashboard-card rounded-2xl border p-6 shadow-sm" style={{ borderColor: 'var(--dashboard-border)' }}>
-					<div className="flex items-start gap-4">
-						<div
-							className="rounded-xl p-4 shadow-sm"
-							style={{
-								background: "color-mix(in srgb, var(--dashboard-primary) 16%, transparent)",
-								color: "var(--dashboard-primary)",
-							}}
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="1.5"
-								className="h-8 w-8"
+					{/* Preferences Card */}
+					<div className="rounded-2xl border border-slate-200/90 bg-white p-6 shadow-sm">
+						<div className="flex items-start gap-4">
+							<div
+								className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl shadow-2xs"
+								style={{
+									background: "color-mix(in srgb, var(--dashboard-primary) 14%, transparent)",
+									color: toneMain,
+								}}
 							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="M9 12.75L11.25 15 15 9.75m-3-7.036A11.959 11.959 0 013.598 6 11.99 11.99 0 003 9.749c0 5.592 3.824 10.29 9 11.623 5.176-1.332 9-6.03 9-11.622 0-1.31-.21-2.571-.598-3.751h-.152c-3.196 0-6.1-1.248-8.25-3.285z"
-								/>
-							</svg>
-						</div>
-						<div className="flex-1">
-							<h2 className="text-xl font-semibold" style={{ color: 'var(--dashboard-heading)' }}>
-								Security
-							</h2>
-							<p className="mt-2 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
-								Change password, enable two-factor authentication, and manage
-								sessions
-							</p>
-							<p className="mt-4 text-xs" style={{ color: 'var(--dashboard-muted)' }}>
-								Coming soon...
-							</p>
+								<Sliders className="h-7 w-7" strokeWidth={2.2} />
+							</div>
+							<div className="flex-1">
+								<h2 className="text-lg font-extrabold text-[#0f172a]">
+									Preferences
+								</h2>
+								<p className="mt-1 text-xs text-slate-500 leading-relaxed">
+									Customize your experience with theme, language, and notification settings
+								</p>
+								<span className="mt-4 inline-block rounded-full bg-slate-100 px-3 py-1 text-[11px] font-bold text-slate-500">
+									Coming soon...
+								</span>
+							</div>
 						</div>
 					</div>
 				</div>
 
-				{/* Preferences Card */}
-				<div className="dashboard-card rounded-2xl border p-6 shadow-sm" style={{ borderColor: 'var(--dashboard-border)' }}>
-					<div className="flex items-start gap-4">
-						<div
-							className="rounded-xl p-4 shadow-sm"
-							style={{
-								background: "color-mix(in srgb, var(--dashboard-primary) 16%, transparent)",
-								color: "var(--dashboard-primary)",
-							}}
-						>
-							<svg
-								xmlns="http://www.w3.org/2000/svg"
-								viewBox="0 0 24 24"
-								fill="none"
-								stroke="currentColor"
-								strokeWidth="1.5"
-								className="h-8 w-8"
-							>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="M10.343 3.94c.09-.542.56-.94 1.11-.94h1.093c.55 0 1.02.398 1.11.94l.149.894c.07.424.384.764.78.93.398.164.855.142 1.205-.108l.737-.527a1.125 1.125 0 011.45.12l.773.774c.39.389.44 1.002.12 1.45l-.527.737c-.25.35-.272.806-.107 1.204.165.397.505.71.93.78l.893.15c.543.09.94.56.94 1.109v1.094c0 .55-.397 1.02-.94 1.11l-.893.149c-.425.07-.765.383-.93.78-.165.398-.143.854.107 1.204l.527.738c.32.447.269 1.06-.12 1.45l-.774.773a1.125 1.125 0 01-1.449.12l-.738-.527c-.35-.25-.806-.272-1.203-.107-.397.165-.71.505-.781.929l-.149.894c-.09.542-.56.94-1.11.94h-1.094c-.55 0-1.019-.398-1.11-.94l-.148-.894c-.071-.424-.384-.764-.781-.93-.398-.164-.854-.142-1.204.108l-.738.527c-.447.32-1.06.269-1.45-.12l-.773-.774a1.125 1.125 0 01-.12-1.45l.527-.737c.25-.35.273-.806.108-1.204-.165-.397-.505-.71-.93-.78l-.894-.15c-.542-.09-.94-.56-.94-1.109v-1.094c0-.55.398-1.02.94-1.11l.894-.149c.424-.07.765-.383.93-.78.165-.398.143-.854-.107-1.204l-.527-.738a1.125 1.125 0 01.12-1.45l.773-.773a1.125 1.125 0 011.45-.12l.737.527c.35.25.807.272 1.204.107.397-.165.71-.505.78-.929l.15-.894z"
-								/>
-								<path
-									strokeLinecap="round"
-									strokeLinejoin="round"
-									d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-								/>
-							</svg>
-						</div>
-						<div className="flex-1">
-							<h2 className="text-xl font-semibold" style={{ color: 'var(--dashboard-heading)' }}>
-								Preferences
-							</h2>
-							<p className="mt-2 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
-								Customize your experience with theme, language, and notification
-								settings
+				{/* ── Need Help? Support Footer Card ── */}
+				<div
+					data-tour="settings-help"
+					className="rounded-2xl border border-dashed border-slate-300 bg-white p-5 shadow-2xs"
+				>
+					<div className="flex items-start gap-3">
+						<HelpCircle className="h-5 w-5 text-slate-400 shrink-0 mt-0.5" />
+						<div>
+							<p className="text-xs font-extrabold text-[#0f172a]">
+								Need Help?
 							</p>
-							<p className="mt-4 text-xs" style={{ color: 'var(--dashboard-muted)' }}>
-								Coming soon...
+							<p className="mt-0.5 text-xs text-slate-500">
+								Contact support at{" "}
+								<a
+									href="mailto:support@igyanai.com"
+									className="font-bold hover:underline"
+									style={{ color: toneMain }}
+								>
+									support@igyanai.com
+								</a>{" "}
+								if you need assistance with your account settings.
 							</p>
 						</div>
-					</div>
-				</div>
-			</div>
-
-			{/* Additional Info */}
-			<div data-tour="settings-help" className="mt-8 rounded-2xl border border-dashed p-6 shadow-sm" style={{ borderColor: 'var(--dashboard-border)', backgroundColor: 'var(--dashboard-surface-solid)' }}>
-				<div className="flex items-start gap-3">
-					<svg
-						xmlns="http://www.w3.org/2000/svg"
-						viewBox="0 0 24 24"
-						fill="none"
-						stroke="currentColor"
-						strokeWidth="1.5"
-						className="h-5 w-5"
-						style={{ color: 'var(--dashboard-muted)' }}
-					>
-						<path
-							strokeLinecap="round"
-							strokeLinejoin="round"
-							d="M11.25 11.25l.041-.02a.75.75 0 011.063.852l-.708 2.836a.75.75 0 001.063.853l.041-.021M21 12a9 9 0 11-18 0 9 9 0 0118 0zm-9-3.75h.008v.008H12V8.25z"
-						/>
-					</svg>
-					<div>
-						<p className="text-sm font-medium" style={{ color: 'var(--dashboard-heading)' }}>
-							Need Help?
-						</p>
-						<p className="mt-1 text-sm" style={{ color: 'var(--dashboard-muted)' }}>
-							Contact support at{" "}
-							<a
-								href="mailto:support@igyanai.com"
-								className="font-semibold text-indigo-500 hover:text-indigo-600"
-							>
-								support@igyanai.com
-							</a>{" "}
-							if you need assistance with your account settings.
-						</p>
 					</div>
 				</div>
 			</div>

@@ -228,6 +228,8 @@ export default function SchoolOnboarding({ userId, onComplete }) {
 											<img
 												src={formData.logo_url}
 												alt="School Logo"
+												width={96}
+												height={96}
 												className="h-24 w-24 rounded-lg border-2 border-zinc-200 object-cover dark:border-zinc-700"
 											/>
 											<button
@@ -254,6 +256,9 @@ export default function SchoolOnboarding({ userId, onComplete }) {
 									) : (
 										<label className="flex h-24 w-24 cursor-pointer items-center justify-center rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 transition-colors hover:border-indigo-500 hover:bg-indigo-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20">
 											<input
+												id="school-logo-input"
+												name="logo"
+												aria-label="Upload school logo"
 												type="file"
 												accept="image/jpeg,image/jpg,image/png"
 												onChange={(e) => handleFileUpload(e, "logo_url")}
@@ -519,6 +524,9 @@ export default function SchoolOnboarding({ userId, onComplete }) {
 								) : (
 									<label className="flex cursor-pointer items-center gap-4 rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 p-4 transition-colors hover:border-indigo-500 hover:bg-indigo-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20">
 										<input
+											id="registration-certificate-input"
+											name="registration_certificate"
+											aria-label="Upload registration certificate"
 											type="file"
 											accept="image/jpeg,image/jpg,image/png,application/pdf"
 											onChange={(e) =>
@@ -631,6 +639,9 @@ export default function SchoolOnboarding({ userId, onComplete }) {
 								) : (
 									<label className="flex cursor-pointer items-center gap-4 rounded-lg border-2 border-dashed border-zinc-300 bg-zinc-50 p-4 transition-colors hover:border-indigo-500 hover:bg-indigo-50 dark:border-zinc-700 dark:bg-zinc-800 dark:hover:border-indigo-500 dark:hover:bg-indigo-900/20">
 										<input
+											id="affiliation-certificate-input"
+											name="affiliation_certificate"
+											aria-label="Upload affiliation certificate"
 											type="file"
 											accept="image/jpeg,image/jpg,image/png,application/pdf"
 											onChange={(e) =>

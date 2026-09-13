@@ -50,7 +50,11 @@ export default function Footer() {
 						</p>
 						<form className="flex gap-2">
 							<input
+								id="newsletter-email"
+								name="email"
 								type="email"
+								aria-label="Email address for newsletter"
+								autoComplete="email"
 								placeholder="email@school.com"
 								className="flex-1 rounded-lg border border-zinc-300 bg-white px-3 py-2 text-sm text-zinc-800 transition-colors focus:border-sky-500 focus:outline-none"
 							/>

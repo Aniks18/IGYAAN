@@ -778,6 +778,8 @@ export default function DashboardSidenav({ isOpen, setIsOpen, isCollapsed, setIs
 							<img
 								src={schoolData.logo_url}
 								alt={schoolData.school_name || "School Logo"}
+								width={40}
+								height={40}
 								loading="lazy"
 								decoding="async"
 								className="h-10 w-10 shrink-0 rounded-lg object-cover shadow-md"

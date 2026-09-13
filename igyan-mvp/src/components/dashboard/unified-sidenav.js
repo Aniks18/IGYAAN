@@ -98,6 +98,8 @@ export default function UnifiedSidenav({ isOpen, setIsOpen, isCollapsed, setIsCo
 	// ══════════════════════════════════════════════════════════════
 	const rawSections = useMemo(() => {
 		if (!user) return [];
+		// super_admin always uses dedicated ADMIN_NAV from Figma design
+		if (user.role === "super_admin") return getNavSections("super_admin");
 		// Whitelist active → use MASTER_NAV so all granted items can render
 		if (userModules instanceof Set) return getMasterNavSections();
 		// No whitelist → use the curated role-specific nav
@@ -115,6 +117,9 @@ export default function UnifiedSidenav({ isOpen, setIsOpen, isCollapsed, setIsCo
 		const B2C = ["b2c_student", "b2c_mentor"];
 		if (B2C.includes(user.role)) return true;
 
+		// super_admin has full access to their configured nav
+		if (user.role === "super_admin") return true;
+
 		// Must-have items ALWAYS show (dashboard, settings, user-access for super_admin)
 		if (mustHaves.has(itemKey)) return true;
 
@@ -124,13 +129,10 @@ export default function UnifiedSidenav({ isOpen, setIsOpen, isCollapsed, setIsCo
 			return !allowed || allowed.includes(user.role);
 		}
 
-		// ── Whitelist is AUTHORITATIVE for ALL roles (including super_admin) ──
+		// ── Whitelist is AUTHORITATIVE for ALL other roles ──
 		if (userModules instanceof Set) {
 			return userModules.has(itemKey);
 		}
-
-		// ── No whitelist entries ──
-		if (user.role === "super_admin") return true;
 
 		// Other roles with no whitelist → standard ROLE_ACCESS check
 		const allowed = ROLE_ACCESS[itemKey];
@@ -163,17 +165,17 @@ export default function UnifiedSidenav({ isOpen, setIsOpen, isCollapsed, setIsCo
 
 			<aside
 				data-tour="sidenav"
-				className={`dashboard-sidenav dashboard-fixed-sidebar fixed left-0 top-0 z-50 flex h-screen transform flex-col border-r transition-all duration-300 ease-in-out lg:translate-x-0 ${
+				className={`dashboard-sidenav dashboard-fixed-sidebar fixed left-0 top-0 z-50 flex h-screen transform flex-col border-r border-[#eeeeee] bg-[#fefefe] transition-all duration-300 ease-in-out lg:translate-x-0 ${
 					isOpen ? "translate-x-0" : "-translate-x-full"
-				} ${isCollapsed ? "dashboard-fixed-sidebar--collapsed w-16" : "w-60"}`}
+				} ${isCollapsed ? "dashboard-fixed-sidebar--collapsed w-16" : "w-[250px]"}`}
 			>
-				{/* ── Logo ── */}
-				<div className="flex h-16 items-center justify-between border-b px-4 border-slate-100">
-					<Link href="/dashboard" className={`flex items-center gap-2.5 ${isCollapsed ? "lg:justify-center" : ""}`}>
+				{/* ── Logo Header ── */}
+				<div className="flex h-16 items-center justify-between border-b border-[#eeeeee] px-4">
+					<Link href="/dashboard" className={`flex items-center gap-3 ${isCollapsed ? "lg:justify-center" : ""}`}>
 						{schoolData?.logo_url ? (
-							<img src={schoolData.logo_url} alt={schoolData.school_name || "School"} loading="lazy" decoding="async" className="h-9 w-9 shrink-0 rounded-full object-cover ring-1 ring-slate-200" />
+							<img src={schoolData.logo_url} alt={schoolData.school_name || "Litera Valley"} width={34} height={34} loading="lazy" decoding="async" className="h-8.5 w-8.5 shrink-0 rounded-full object-cover ring-1 ring-slate-200" />
 						) : (
-							<div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-slate-50 ring-1 ring-slate-200/80 shadow-xs overflow-hidden">
+							<div className="flex h-8.5 w-8.5 shrink-0 items-center justify-center rounded-full bg-slate-50 ring-1 ring-slate-200/80 shadow-xs overflow-hidden">
 								<Image src="/logo1.png" alt="Litera Valley" width={32} height={32} className="rounded-full object-cover" />
 							</div>
 						)}
@@ -205,7 +207,7 @@ export default function UnifiedSidenav({ isOpen, setIsOpen, isCollapsed, setIsCo
 				<nav className="flex-1 space-y-1.5 overflow-y-auto overflow-x-hidden px-3.5 py-4 [scrollbar-width:none] [&::-webkit-scrollbar]:hidden">
 					{sections.map((section, si) => (
 						<div key={si} className="space-y-1">
-							{/* Section label — only shows if section has visible items (pre-filtered) */}
+							{/* Section label */}
 							{section.label && !isCollapsed && (
 								<p className="mt-5 mb-2 px-3 text-[11px] font-semibold uppercase tracking-wider text-slate-400">
 									{section.label}
@@ -213,7 +215,7 @@ export default function UnifiedSidenav({ isOpen, setIsOpen, isCollapsed, setIsCo
 							)}
 							{section.label && isCollapsed && <div className="my-2 mx-2 border-t" style={{ borderColor: "var(--dashboard-border)" }} />}
 
-							{/* Items — already filtered, just render */}
+							{/* Items */}
 							{section.items.map((item) => {
 								const isActive = pathname === item.href || (item.href !== '/dashboard' && pathname?.startsWith(item.href));
 								const Icon = item.icon;
@@ -226,17 +228,23 @@ export default function UnifiedSidenav({ isOpen, setIsOpen, isCollapsed, setIsCo
 										onClick={() => setIsOpen(false)}
 										className={`group relative flex items-center gap-3.5 rounded-xl px-3.5 py-2.5 text-sm font-medium transition-all duration-150 ${
 										isActive
-											? "bg-[#fff5ed] text-[#ea580c] font-semibold shadow-xs"
+											? "dashboard-nav-item--active font-semibold shadow-xs"
 											: "text-slate-600 hover:bg-slate-50 hover:text-slate-900"
 										} ${isCollapsed ? "lg:justify-center lg:px-0" : ""}`}
 										title={isCollapsed ? item.name : ""}
 									>
-										<div className={`shrink-0 transition-colors ${isCollapsed ? "lg:mx-auto" : ""} ${isActive ? "text-[#ea580c]" : "text-slate-500 group-hover:text-slate-700"}`}>
+										<div className={`shrink-0 transition-colors ${isCollapsed ? "lg:mx-auto" : ""} ${isActive ? "text-[var(--dashboard-primary)]" : "text-slate-500 group-hover:text-slate-700"}`}>
 											{item.isCustomIcon ? <Icon /> : <Icon className="h-5 w-5" />}
 										</div>
 										{!isCollapsed && <span className="min-w-0 flex-1 truncate text-[13.5px]">{item.name}</span>}
 										{!isCollapsed && item.badge && (
-											<span className="ml-auto grid h-5 min-w-5 place-items-center rounded-full bg-orange-100 px-1.5 text-[10px] font-bold text-orange-600">
+											<span
+												className="ml-auto grid h-5 min-w-5 place-items-center rounded-full px-1.5 text-[10px] font-bold"
+												style={{
+													backgroundColor: "color-mix(in srgb, var(--dashboard-primary) 15%, transparent)",
+													color: "var(--dashboard-primary)",
+												}}
+											>
 												{item.badge}
 											</span>
 										)}
@@ -256,7 +264,7 @@ export default function UnifiedSidenav({ isOpen, setIsOpen, isCollapsed, setIsCo
 
 				{/* ── Footer ── */}
 				{!isCollapsed && (
-					<div className="mt-auto px-4 py-4 text-center border-t border-slate-100">
+					<div className="mt-auto px-4 py-4 text-center">
 						<span className="text-xs text-slate-400 font-normal">
 							Powered by Igyan.ai
 						</span>

@@ -185,6 +185,9 @@ export default function BulkUploadModal({ isOpen, onClose, onUpload }) {
 						onDrop={handleDrop}
 					>
 						<input
+							id="bulk-student-file-upload"
+							name="bulkFile"
+							aria-label="Upload students CSV or Excel file"
 							type="file"
 							accept=".csv,.xlsx,.xls"
 							onChange={handleChange}

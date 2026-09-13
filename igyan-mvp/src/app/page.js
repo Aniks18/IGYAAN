@@ -235,6 +235,8 @@ function MediaCarousel() {
               <img
                 src={`https://api.microlink.io/?url=${encodeURIComponent(media.url)}&screenshot=true&meta=false&embed=screenshot.url`}
                 alt={`${media.name} article preview`}
+                width={420}
+                height={320}
                 className="h-full w-full object-cover object-top transition-transform duration-500 group-hover:scale-105"
                 loading="lazy"
                 onError={(e) => {
