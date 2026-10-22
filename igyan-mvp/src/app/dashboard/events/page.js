@@ -41,237 +41,12 @@ import {
 	Building,
 } from "lucide-react";
 
-// Curated high-quality demo events matching Litera Valley school activities
-const DEMO_EVENTS = [
-	{
-		id: "demo-evt-1",
-		title: "Litera Annual Science & Tech Expo 2026",
-		description:
-			"A showcase of student innovations in Robotics, AI, Renewable Energy, and Environmental Science featuring live working models and project pitches.",
-		event_type: "academic",
-		category_label: "Science & Tech",
-		start_date: "2026-10-15T09:30:00Z",
-		end_date: "2026-10-15T16:30:00Z",
-		location: "Main Auditorium & Innovation Lab",
-		max_participants: 250,
-		registered_count: 184,
-		registration_deadline: "2026-10-10T23:59:00Z",
-		is_public: true,
-		status: "upcoming",
-		banner_image:
-			"https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80",
-		coordinator: "Dr. Arvind Swaminathan",
-		target_audience: "Grade 6 - 12",
-	},
-	{
-		id: "demo-evt-2",
-		title: "Inter-School Football Championship",
-		description:
-			"The premier regional soccer tournament with 16 competing schools, knockout rounds, and awards for Best Striker and Fair Play.",
-		event_type: "sports",
-		category_label: "Sports & Athletics",
-		start_date: "2026-10-22T08:00:00Z",
-		end_date: "2026-10-24T18:00:00Z",
-		location: "Senior Sports Complex & Arena",
-		max_participants: 120,
-		registered_count: 112,
-		registration_deadline: "2026-10-18T18:00:00Z",
-		is_public: true,
-		status: "upcoming",
-		banner_image:
-			"https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&auto=format&fit=crop&q=80",
-		coordinator: "Coach Rajesh Verma",
-		target_audience: "Grade 8 - 12 (Boys & Girls)",
-	},
-	{
-		id: "demo-evt-3",
-		title: "Lit Fest: National Youth Debate & Poetry Slam",
-		description:
-			"A 2-day literary celebration encompassing Parliamentary Debates, Model United Nations simulation, Creative Writing, and Spoken Word.",
-		event_type: "cultural",
-		category_label: "Literary & Arts",
-		start_date: "2026-11-05T10:00:00Z",
-		end_date: "2026-11-06T17:00:00Z",
-		location: "Amphitheatre & Library Hall",
-		max_participants: 180,
-		registered_count: 145,
-		registration_deadline: "2026-11-01T20:00:00Z",
-		is_public: true,
-		status: "upcoming",
-		banner_image:
-			"https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&auto=format&fit=crop&q=80",
-		coordinator: "Ms. Ananya Roy",
-		target_audience: "Grade 7 - 12",
-	},
-	{
-		id: "demo-evt-4",
-		title: "AI & Machine Learning Hands-on Bootcamp",
-		description:
-			"Practical immersion into neural networks, computer vision, and building real-world AI applications with industry mentors.",
-		event_type: "workshop",
-		category_label: "Workshops",
-		start_date: "2026-09-28T11:00:00Z",
-		end_date: "2026-09-28T15:30:00Z",
-		location: "Computer Lab 3 & Online Stream",
-		max_participants: 90,
-		registered_count: 88,
-		registration_deadline: "2026-09-25T23:59:00Z",
-		is_public: false,
-		status: "ongoing",
-		banner_image:
-			"https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80",
-		coordinator: "Prof. Laura White",
-		target_audience: "Grade 9 - 12 & Faculty",
-	},
-	{
-		id: "demo-evt-5",
-		title: "Annual Music & Dance Cultural Carnival",
-		description:
-			"Mesmerizing classical, fusion, and contemporary musical concerts, orchestra displays, and theatrical plays performed by student troupes.",
-		event_type: "cultural",
-		category_label: "Cultural & Arts",
-		start_date: "2026-12-18T16:00:00Z",
-		end_date: "2026-12-19T21:00:00Z",
-		location: "Grand Central Quadrangle",
-		max_participants: 400,
-		registered_count: 320,
-		registration_deadline: "2026-12-10T18:00:00Z",
-		is_public: true,
-		status: "upcoming",
-		banner_image:
-			"https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80",
-		coordinator: "Mr. David Kim",
-		target_audience: "All Students, Parents & Alumni",
-	},
-	{
-		id: "demo-evt-6",
-		title: "Junior Olympiad in Mathematics & Logic",
-		description:
-			"Speed arithmetic, logic puzzles, and geometric problem-solving challenge for primary and middle grade students with medal honors.",
-		event_type: "competition",
-		category_label: "Competitions",
-		start_date: "2026-08-14T09:00:00Z",
-		end_date: "2026-08-14T13:00:00Z",
-		location: "Academic Block B",
-		max_participants: 150,
-		registered_count: 150,
-		registration_deadline: "2026-08-10T18:00:00Z",
-		is_public: false,
-		status: "completed",
-		banner_image:
-			"https://images.unsplash.com/photo-1509228468518-180dd4864904?w=800&auto=format&fit=crop&q=80",
-		coordinator: "Ms. Priya Sharma",
-		target_audience: "Grade 3 - 8",
-	},
-];
-
-// Sample registrations for demo events
-const DEMO_REGISTRATIONS = [
-	{
-		id: "reg-1",
-		user_name: "Raj Patel",
-		user_email: "rajpatel.literavalley.edu.in",
-		user_phone: "+91 98765 43210",
-		student_id: "LTV023849",
-		class_section: "5-C",
-		status: "registered",
-		registered_at: "2026-09-02T10:14:00Z",
-	},
-	{
-		id: "reg-2",
-		user_name: "Sophia Kim",
-		user_email: "sophiakim.literavalley.edu.in",
-		user_phone: "+91 98765 43211",
-		student_id: "LTV023850",
-		class_section: "2-D",
-		status: "registered",
-		registered_at: "2026-09-03T11:20:00Z",
-	},
-	{
-		id: "reg-3",
-		user_name: "Maya Chen",
-		user_email: "mayachen.literavalley.edu.in",
-		user_phone: "+91 98765 43212",
-		student_id: "LTV023848",
-		class_section: "3-A",
-		status: "attended",
-		registered_at: "2026-09-04T09:45:00Z",
-	},
-	{
-		id: "reg-4",
-		user_name: "Ethan Brown",
-		user_email: "ethanbrown.literavalley.edu.in",
-		user_phone: "+91 98765 43213",
-		student_id: "LTV023851",
-		class_section: "1-A",
-		status: "registered",
-		registered_at: "2026-09-05T14:30:00Z",
-	},
-	{
-		id: "reg-5",
-		user_name: "Arjun Mehta",
-		user_email: "arjunmehta.literavalley.edu.in",
-		user_phone: "+91 98765 43214",
-		student_id: "LTV023847",
-		class_section: "4-B",
-		status: "attended",
-		registered_at: "2026-09-06T16:15:00Z",
-	},
-	{
-		id: "reg-6",
-		user_name: "Aisha Khan",
-		user_email: "aishakhan.literavalley.edu.in",
-		user_phone: "+91 98765 43215",
-		student_id: "LTV023852",
-		class_section: "6-F",
-		status: "cancelled",
-		registered_at: "2026-09-07T08:50:00Z",
-	},
-	{
-		id: "reg-7",
-		user_name: "Mohammed Ali",
-		user_email: "mohammedali.literavalley.edu.in",
-		user_phone: "+91 98765 43216",
-		student_id: "LTV023853",
-		class_section: "7-B",
-		status: "registered",
-		registered_at: "2026-09-08T12:05:00Z",
-	},
-];
-
-const PRESET_BANNERS = [
-	{
-		name: "Science & Innovation",
-		url: "https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=800&auto=format&fit=crop&q=80",
-	},
-	{
-		name: "Sports & Tournament",
-		url: "https://images.unsplash.com/photo-1574629810360-7efbbe195018?w=800&auto=format&fit=crop&q=80",
-	},
-	{
-		name: "Debate & Literature",
-		url: "https://images.unsplash.com/photo-1475721027785-f74eccf877e2?w=800&auto=format&fit=crop&q=80",
-	},
-	{
-		name: "Tech & Coding",
-		url: "https://images.unsplash.com/photo-1526374965328-7f61d4dc18c5?w=800&auto=format&fit=crop&q=80",
-	},
-	{
-		name: "Music & Arts Festival",
-		url: "https://images.unsplash.com/photo-1514525253161-7a46d19cd819?w=800&auto=format&fit=crop&q=80",
-	},
-	{
-		name: "Awards & Graduation",
-		url: "https://images.unsplash.com/photo-1523240795612-9a054b0db644?w=800&auto=format&fit=crop&q=80",
-	},
-];
-
 export default function EventsManagement() {
 	const router = useRouter();
 	const { user, loading } = useAuth();
 
 	// State
-	const [events, setEvents] = useState(DEMO_EVENTS);
+	const [events, setEvents] = useState([]);
 	const [searchTerm, setSearchTerm] = useState("");
 	const [selectedCategory, setSelectedCategory] = useState("all");
 	const [selectedStatus, setSelectedStatus] = useState("all");
@@ -299,7 +74,10 @@ export default function EventsManagement() {
 	// Registrations Modal State
 	const [showRegistrationsModal, setShowRegistrationsModal] = useState(false);
 	const [activeEvent, setActiveEvent] = useState(null);
-	const [registrations, setRegistrations] = useState(DEMO_REGISTRATIONS);
+	const [registrations, setRegistrations] = useState([]);
+	const [registrationsLoading, setRegistrationsLoading] = useState(false);
+	const [savingRegistration, setSavingRegistration] = useState(false);
+	const [registrationError, setRegistrationError] = useState("");
 	const [regSearchTerm, setRegSearchTerm] = useState("");
 	const [regFilterStatus, setRegFilterStatus] = useState("all");
 	const [showAddAttendeeModal, setShowAddAttendeeModal] = useState(false);
@@ -324,7 +102,7 @@ export default function EventsManagement() {
 		max_participants: 100,
 		registration_deadline: "",
 		is_public: true,
-		banner_image: PRESET_BANNERS[0].url,
+		banner_image: "",
 		coordinator: "",
 		target_audience: "All Students",
 	};
@@ -378,28 +156,34 @@ export default function EventsManagement() {
 				.eq("school_id", user.school_id)
 				.order("start_date", { ascending: true });
 
-			if (!error && data && data.length > 0) {
-				// Augment fetched events with helper fields if missing
-				const augmented = data.map((ev, idx) => ({
-					...ev,
-					registered_count:
-						ev.registered_count !== undefined
-							? ev.registered_count
-							: Math.floor((ev.max_participants || 100) * 0.65),
-					coordinator: ev.coordinator || "Event Committee",
-					target_audience: ev.target_audience || "All Students",
-					banner_image:
-						ev.banner_image ||
-						PRESET_BANNERS[idx % PRESET_BANNERS.length].url,
-				}));
-				setEvents(augmented);
-			} else {
-				// Fallback to rich curated demo events
-				setEvents(DEMO_EVENTS);
+			if (error) throw error;
+			const eventIds = (data || []).map((event) => event.id);
+			if (eventIds.length === 0) {
+				setEvents([]);
+				return;
 			}
+
+			const { data: registrationRows, error: registrationError } = await supabase
+				.from("event_registrations")
+				.select("event_id, status")
+				.in("event_id", eventIds);
+			if (registrationError) throw registrationError;
+
+			const registrationCounts = (registrationRows || []).reduce((counts, registration) => {
+				if (registration.status !== "cancelled") {
+					counts[registration.event_id] = (counts[registration.event_id] || 0) + 1;
+				}
+				return counts;
+			}, {});
+
+			setEvents((data || []).map((event) => ({
+				...event,
+				registered_count: registrationCounts[event.id] || 0,
+			})));
 		} catch (err) {
 			console.error("Error fetching events:", err);
-			setEvents(DEMO_EVENTS);
+			setEvents([]);
+			setErrorMsg("Could not load events. Please refresh and try again.");
 		} finally {
 			setIsLoading(false);
 		}
@@ -407,26 +191,25 @@ export default function EventsManagement() {
 
 	// Fetch Registrations for an Event
 	const fetchRegistrations = async (eventId) => {
-		if (!eventId || eventId.toString().startsWith("demo-")) {
-			setRegistrations(DEMO_REGISTRATIONS);
-			return;
-		}
+		if (!eventId) return;
 
 		try {
+			setRegistrationsLoading(true);
+			setRegistrationError("");
 			const { data, error } = await supabase
 				.from("event_registrations")
 				.select("*")
 				.eq("event_id", eventId)
 				.order("registered_at", { ascending: false });
 
-			if (!error && data && data.length > 0) {
-				setRegistrations(data);
-			} else {
-				setRegistrations(DEMO_REGISTRATIONS);
-			}
+			if (error) throw error;
+			setRegistrations(data || []);
 		} catch (err) {
 			console.error("Error fetching registrations:", err);
-			setRegistrations(DEMO_REGISTRATIONS);
+			setRegistrations([]);
+			setRegistrationError("Could not load registrations. Please try again.");
+		} finally {
+			setRegistrationsLoading(false);
 		}
 	};
 
@@ -435,6 +218,7 @@ export default function EventsManagement() {
 		setActiveEvent(event);
 		setRegSearchTerm("");
 		setRegFilterStatus("all");
+		setRegistrationError("");
 		await fetchRegistrations(event.id);
 		setShowRegistrationsModal(true);
 	};
@@ -480,7 +264,7 @@ export default function EventsManagement() {
 				? new Date(event.registration_deadline).toISOString().slice(0, 16)
 				: "",
 			is_public: event.is_public !== undefined ? event.is_public : true,
-			banner_image: event.banner_image || PRESET_BANNERS[0].url,
+			banner_image: event.banner_image || "",
 			coordinator: event.coordinator || "",
 			target_audience: event.target_audience || "All Students",
 		});
@@ -506,13 +290,15 @@ export default function EventsManagement() {
 				event_type: formData.event_type,
 				start_date: new Date(formData.start_date).toISOString(),
 				end_date: new Date(formData.end_date).toISOString(),
-				location: formData.location.trim() || "Campus Grounds",
+				location: formData.location.trim(),
 				max_participants: parseInt(formData.max_participants, 10) || 100,
 				registration_deadline: formData.registration_deadline
 					? new Date(formData.registration_deadline).toISOString()
 					: new Date(formData.start_date).toISOString(),
 				is_public: formData.is_public,
 				banner_image: formData.banner_image,
+				coordinator: formData.coordinator?.trim() || null,
+				target_audience: formData.target_audience || null,
 				status: "upcoming",
 			};
 
@@ -524,14 +310,11 @@ export default function EventsManagement() {
 			}
 
 			if (editingEvent) {
-				// If editing an existing real DB record
-				if (!editingEvent.id.toString().startsWith("demo-")) {
-					const { error } = await supabase
-						.from("events")
-						.update(payload)
-						.eq("id", editingEvent.id);
-					if (error) throw error;
-				}
+				const { error } = await supabase
+					.from("events")
+					.update(payload)
+					.eq("id", editingEvent.id);
+				if (error) throw error;
 
 				// Update state
 				setEvents((prev) =>
@@ -550,28 +333,17 @@ export default function EventsManagement() {
 				setSuccessMsg(`Event "${payload.title}" updated successfully!`);
 			} else {
 				// Creating a new event
-				let newId = `evt-${Date.now()}`;
-				if (user?.school_id) {
-					try {
-						const { data, error } = await supabase
-							.from("events")
-							.insert([payload])
-							.select()
-							.single();
-						if (!error && data) {
-							newId = data.id;
-						}
-					} catch (dbErr) {
-						console.warn("Supabase insert notice:", dbErr);
-					}
-				}
+				if (!user?.school_id) throw new Error("A school account is required to create an event.");
+				const { data, error } = await supabase
+					.from("events")
+					.insert([payload])
+					.select()
+					.single();
+				if (error) throw error;
 
 				const newEventItem = {
-					...payload,
-					id: newId,
+					...data,
 					registered_count: 0,
-					coordinator: formData.coordinator || "Event Organizers",
-					target_audience: formData.target_audience || "All Students",
 				};
 
 				setEvents((prev) => [newEventItem, ...prev]);
@@ -594,9 +366,8 @@ export default function EventsManagement() {
 			return;
 
 		try {
-			if (!eventId.toString().startsWith("demo-")) {
-				await supabase.from("events").delete().eq("id", eventId);
-			}
+			const { error } = await supabase.from("events").delete().eq("id", eventId);
+			if (error) throw error;
 			setEvents((prev) => prev.filter((ev) => ev.id !== eventId));
 			setSuccessMsg(`Event "${eventTitle}" was deleted.`);
 			setActiveMenuEventId(null);
@@ -642,14 +413,14 @@ export default function EventsManagement() {
 		);
 	};
 
-	// Export Registrations of Active Event
+	// Export the currently visible attendee list as CSV.
 	const handleExportRegistrations = () => {
-		if (!activeEvent || registrations.length === 0) {
+		if (!activeEvent || filteredRegistrations.length === 0) {
 			alert("No registrations available to export.");
 			return;
 		}
 
-		const rows = registrations.map((r, idx) => ({
+		const rows = filteredRegistrations.map((r, idx) => ({
 			"Sl No": idx + 1,
 			"Student Name": r.user_name || "N/A",
 			"Student ID / Roll": r.student_id || "N/A",
@@ -661,35 +432,50 @@ export default function EventsManagement() {
 		}));
 
 		const ws = XLSX.utils.json_to_sheet(rows);
-		const wb = XLSX.utils.book_new();
-		XLSX.utils.book_append_sheet(wb, ws, "Attendees");
-		XLSX.writeFile(
-			wb,
-			`${activeEvent.title.replace(/[^a-zA-Z0-9]/g, "_")}_Registrations.xlsx`
-		);
+		const csv = XLSX.utils.sheet_to_csv(ws);
+		const url = URL.createObjectURL(new Blob([csv], { type: "text/csv;charset=utf-8" }));
+		const link = document.createElement("a");
+		link.href = url;
+		link.download = `${activeEvent.title.replace(/[^a-zA-Z0-9]/g, "_")}_Registrations.csv`;
+		document.body.appendChild(link);
+		link.click();
+		document.body.removeChild(link);
+		URL.revokeObjectURL(url);
 	};
 
 	// Add Attendee Manually
-	const handleAddAttendee = (e) => {
+	const handleAddAttendee = async (e) => {
 		e.preventDefault();
-		if (!newAttendee.name.trim() || !newAttendee.email.trim()) {
-			alert("Please fill in Student Name and Email.");
+		if (!activeEvent || !newAttendee.name.trim() || !newAttendee.email.trim()) {
+			setRegistrationError("Please provide the student name and email.");
 			return;
 		}
 
-		const newRegItem = {
-			id: `reg-${Date.now()}`,
+		if (registrations.filter((registration) => registration.status !== "cancelled").length >= (activeEvent.max_participants || 100)) {
+			setRegistrationError("This event has reached its capacity.");
+			return;
+		}
+
+		const payload = {
+			event_id: activeEvent.id,
 			user_name: newAttendee.name.trim(),
 			user_email: newAttendee.email.trim(),
-			user_phone: newAttendee.phone.trim() || "+91 98765 00000",
-			student_id: `LTV0238${Math.floor(50 + Math.random() * 40)}`,
+			user_phone: newAttendee.phone.trim() || null,
 			class_section: newAttendee.class_section || "5-C",
 			status: "registered",
-			registered_at: new Date().toISOString(),
 		};
 
-		setRegistrations((prev) => [newRegItem, ...prev]);
-		if (activeEvent) {
+		try {
+			setSavingRegistration(true);
+			setRegistrationError("");
+			const { data: newRegItem, error } = await supabase
+				.from("event_registrations")
+				.insert(payload)
+				.select()
+				.single();
+			if (error) throw error;
+
+			setRegistrations((prev) => [newRegItem, ...prev]);
 			setEvents((prev) =>
 				prev.map((ev) =>
 					ev.id === activeEvent.id
@@ -697,32 +483,61 @@ export default function EventsManagement() {
 						: ev
 				)
 			);
-		}
 
-		setNewAttendee({
-			name: "",
-			email: "",
-			phone: "",
-			class_section: "5-C",
-		});
-		setShowAddAttendeeModal(false);
-		setSuccessMsg("Attendee registered successfully!");
-		setTimeout(() => setSuccessMsg(""), 3000);
+			setNewAttendee({ name: "", email: "", phone: "", class_section: "5-C" });
+			setShowAddAttendeeModal(false);
+			setSuccessMsg("Attendee registered successfully!");
+			setTimeout(() => setSuccessMsg(""), 3000);
+		} catch (err) {
+			console.error("Error adding attendee:", err);
+			setRegistrationError(err.message || "Could not register this attendee.");
+		} finally {
+			setSavingRegistration(false);
+		}
 	};
 
 	// Toggle/Update Attendee Status
-	const handleUpdateAttendeeStatus = (regId, nextStatus) => {
-		setRegistrations((prev) =>
-			prev.map((r) => (r.id === regId ? { ...r, status: nextStatus } : r))
-		);
+	const handleUpdateAttendeeStatus = async (regId, nextStatus) => {
+		const previousStatus = registrations.find((registration) => registration.id === regId)?.status;
+		try {
+			setSavingRegistration(true);
+			setRegistrationError("");
+			const { error } = await supabase
+				.from("event_registrations")
+				.update({ status: nextStatus })
+				.eq("id", regId)
+				.eq("event_id", activeEvent.id);
+			if (error) throw error;
+			setRegistrations((prev) => prev.map((r) => (r.id === regId ? { ...r, status: nextStatus } : r)));
+			const countChange = (previousStatus === "cancelled" ? 1 : 0) - (nextStatus === "cancelled" ? 1 : 0);
+			if (countChange) {
+				setEvents((prev) => prev.map((event) => event.id === activeEvent.id
+					? { ...event, registered_count: Math.max(0, (event.registered_count || 0) + countChange) }
+					: event));
+			}
+		} catch (err) {
+			console.error("Error updating attendee:", err);
+			setRegistrationError(err.message || "Could not update the attendee status.");
+		} finally {
+			setSavingRegistration(false);
+		}
 	};
 
 	// Remove Attendee
-	const handleRemoveAttendee = (regId) => {
+	const handleRemoveAttendee = async (regId) => {
 		if (!confirm("Are you sure you want to remove this registration?")) return;
-		setRegistrations((prev) => prev.filter((r) => r.id !== regId));
-		if (activeEvent) {
-			setEvents((prev) =>
+		const registration = registrations.find((item) => item.id === regId);
+		try {
+			setSavingRegistration(true);
+			setRegistrationError("");
+			const { error } = await supabase
+				.from("event_registrations")
+				.delete()
+				.eq("id", regId)
+				.eq("event_id", activeEvent.id);
+			if (error) throw error;
+			setRegistrations((prev) => prev.filter((r) => r.id !== regId));
+			if (registration?.status !== "cancelled") setEvents((prev) =>
 				prev.map((ev) =>
 					ev.id === activeEvent.id
 						? {
@@ -735,6 +550,11 @@ export default function EventsManagement() {
 						: ev
 				)
 			);
+		} catch (err) {
+			console.error("Error removing attendee:", err);
+			setRegistrationError(err.message || "Could not remove this attendee.");
+		} finally {
+			setSavingRegistration(false);
 		}
 	};
 
@@ -1394,8 +1214,8 @@ export default function EventsManagement() {
 										<div className="mt-4 space-y-2 border-t border-slate-100 pt-3 text-xs text-slate-600">
 											<div className="flex items-center gap-2">
 												<MapPin className="h-3.5 w-3.5 text-slate-400 shrink-0" />
-												<span className="truncate font-medium">
-													{event.location || "Campus Venue"}
+													<span className="truncate font-medium">
+														{event.location || "Not specified"}
 												</span>
 											</div>
 
@@ -1404,7 +1224,7 @@ export default function EventsManagement() {
 												<span className="truncate text-slate-500">
 													Audience:{" "}
 													<strong className="text-slate-700 font-semibold">
-														{event.target_audience || "All Grades"}
+														{event.target_audience || "Not specified"}
 													</strong>
 												</span>
 											</div>
@@ -1490,19 +1310,17 @@ export default function EventsManagement() {
 												{/* Title & Banner thumbnail */}
 												<td className="py-3.5 pl-6 pr-4">
 													<div className="flex items-center gap-3">
-														<img
-															src={
-																event.banner_image || PRESET_BANNERS[0].url
-															}
-															alt={event.title}
-															className="h-10 w-14 rounded-lg object-cover shadow-xs shrink-0"
-														/>
+														{event.banner_image ? (
+															<img src={event.banner_image} alt={event.title} className="h-10 w-14 rounded-lg object-cover shadow-xs shrink-0" />
+														) : (
+															<span className="flex h-10 w-14 shrink-0 items-center justify-center rounded-lg bg-orange-50 text-[#ea580c]"><CalendarDays className="h-4 w-4" /></span>
+														)}
 														<div className="min-w-0">
 															<p className="font-bold text-slate-900 line-clamp-1">
 																{event.title}
 															</p>
 															<p className="text-[11px] text-slate-400 line-clamp-1">
-																{event.coordinator || "Event Organizers"}
+															{event.coordinator || "Not specified"}
 															</p>
 														</div>
 													</div>
@@ -2037,6 +1855,11 @@ export default function EventsManagement() {
 
 						{/* Drawer Body (Scrollable) */}
 						<div className="p-6 space-y-5 overflow-y-auto flex-1 text-xs [scrollbar-width:thin]">
+							{registrationError && (
+								<div className="rounded-xl border border-rose-200 bg-rose-50 px-3 py-2 text-xs font-medium text-rose-700" role="alert">
+									{registrationError}
+								</div>
+							)}
 							{/* 4 Mini Stat Cards */}
 							<div className="grid grid-cols-2 gap-2.5 sm:grid-cols-4">
 								<div className="rounded-xl border border-slate-100 bg-slate-50/80 p-3">
@@ -2118,7 +1941,8 @@ export default function EventsManagement() {
 									<button
 										type="button"
 										onClick={() => setShowAddAttendeeModal(true)}
-										className="flex items-center gap-1 rounded-xl bg-[#ea580c] px-3 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-[#c2410c] transition"
+										disabled={savingRegistration || registrations.filter((registration) => registration.status !== "cancelled").length >= (activeEvent.max_participants || 100)}
+										className="flex items-center gap-1 rounded-xl bg-[#ea580c] px-3 py-1.5 text-xs font-bold text-white shadow-2xs hover:bg-[#c2410c] transition disabled:cursor-not-allowed disabled:opacity-50"
 									>
 										<UserPlus className="h-3.5 w-3.5" />
 										<span>Add</span>
@@ -2127,7 +1951,12 @@ export default function EventsManagement() {
 							</div>
 
 							{/* Attendees List */}
-							{filteredRegistrations.length === 0 ? (
+							{registrationsLoading ? (
+								<div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 py-10 text-center">
+									<div className="h-6 w-6 animate-spin rounded-full border-2 border-slate-200 border-t-[#ea580c]" />
+									<p className="mt-3 text-xs font-bold text-slate-700">Loading registrations…</p>
+								</div>
+							) : filteredRegistrations.length === 0 ? (
 								<div className="flex flex-col items-center justify-center rounded-2xl border border-dashed border-slate-200 py-10 text-center">
 									<Users className="h-7 w-7 text-slate-300 mb-2" />
 									<p className="text-xs font-bold text-slate-700">
@@ -2191,7 +2020,8 @@ export default function EventsManagement() {
 																e.target.value
 															)
 														}
-														className={`rounded-lg border px-2 py-1 text-[10px] font-bold focus:outline-none ${
+												disabled={savingRegistration}
+												className={`rounded-lg border px-2 py-1 text-[10px] font-bold focus:outline-none disabled:cursor-not-allowed disabled:opacity-50 ${
 															reg.status === "attended"
 																? "bg-emerald-50 text-emerald-700 border-emerald-200"
 																: reg.status === "cancelled"
@@ -2207,7 +2037,8 @@ export default function EventsManagement() {
 													<button
 														type="button"
 														onClick={() => handleRemoveAttendee(reg.id)}
-														className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition"
+												disabled={savingRegistration}
+												className="rounded-lg p-1.5 text-slate-400 hover:bg-rose-50 hover:text-rose-600 transition disabled:cursor-not-allowed disabled:opacity-50"
 														title="Remove Attendee"
 													>
 														<Trash2 className="h-3.5 w-3.5" />
@@ -2337,9 +2168,10 @@ export default function EventsManagement() {
 								</button>
 								<button
 									type="submit"
-									className="rounded-xl bg-[#ea580c] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#c2410c]"
+									disabled={savingRegistration}
+									className="rounded-xl bg-[#ea580c] px-4 py-2 text-xs font-bold text-white shadow-xs hover:bg-[#c2410c] disabled:cursor-not-allowed disabled:opacity-50"
 								>
-									Add to Event
+									{savingRegistration ? "Adding…" : "Add to Event"}
 								</button>
 							</div>
 						</form>

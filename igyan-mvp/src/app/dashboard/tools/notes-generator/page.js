@@ -3,10 +3,9 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../utils/auth_context";
+import { requestAiChat } from "@/app/utils/ai-chat";
 import NotesRenderer from "./components/NotesRenderer";
 import { generateNotesPDF } from "./utils/notesPDFGenerator";
-
-const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
 
 export default function NotesGeneratorPage() {
 	const { user, loading } = useAuth();
@@ -99,28 +98,17 @@ Guidelines:
 
 Return ONLY valid JSON, no additional text.`;
 
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${OPENAI_API_KEY}`,
-				},
-				body: JSON.stringify({
-					model: "gpt-4o",
-					messages: [
-						{
-							role: "system",
-							content: "You are an expert educator who creates clear, well-structured study notes. Always return valid JSON with comprehensive educational content including topics, subtopics, definitions, examples, practice questions, and curated learning references. Include real educational URLs from Khan Academy, YouTube educational channels, Coursera, edX, MIT OpenCourseWare, and other reputable sources."
-						},
-						{
-							role: "user",
-							content: prompt
-						}
-					],
-					temperature: 0.7,
-					max_tokens: 4000,
-					response_format: { type: "json_object" }
-				}),
+			const response = await requestAiChat({
+				messages: [
+					{
+						role: "system",
+						content: "You are an expert educator who creates clear, well-structured study notes. Always return valid JSON with comprehensive educational content including topics, subtopics, definitions, examples, practice questions, and curated learning references. Include real educational URLs from Khan Academy, YouTube educational channels, Coursera, edX, MIT OpenCourseWare, and other reputable sources."
+					},
+					{ role: "user", content: prompt }
+				],
+				temperature: 0.7,
+				max_tokens: 4000,
+				json: true
 			});
 
 			if (!response.ok) {
@@ -181,18 +169,19 @@ Return ONLY valid JSON, no additional text.`;
 
 	return (
 		<div className="min-h-screen" style={{ background: 'var(--dashboard-background)' }}>
-			<div className="mx-auto max-w-7xl px-4 py-8 sm:px-6 lg:px-8">
-				{/* Header */}
-				<div className="mb-8">
-					<div className="flex items-center gap-3 mb-4">
+			<div className="mx-auto max-w-[1440px] px-4 py-6 sm:px-6 lg:px-10 lg:py-10">
+				<header className="mb-7 border-b pb-7 sm:mb-10" style={{ borderColor: 'var(--dashboard-border)' }}>
+					<div className="flex items-start gap-3">
 						<button
 							onClick={() => router.back()}
-							className="flex h-10 w-10 items-center justify-center rounded-lg border transition-colors"
+							className="flex h-10 w-10 shrink-0 items-center justify-center rounded-lg border transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2"
 							style={{
 								borderColor: 'var(--dashboard-border)',
 								background: 'var(--dashboard-surface-solid)',
-								color: 'var(--dashboard-text)'
+								color: 'var(--dashboard-text)',
+								'--tw-ring-color': 'var(--dashboard-primary)'
 							}}
+							aria-label="Back to teaching tools"
 							onMouseEnter={(e) => e.currentTarget.style.opacity = '0.8'}
 							onMouseLeave={(e) => e.currentTarget.style.opacity = '1'}
 						>
@@ -200,29 +189,37 @@ Return ONLY valid JSON, no additional text.`;
 								<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
 							</svg>
 						</button>
-						<div>
-							<h1 className="text-3xl font-bold" style={{ color: 'var(--dashboard-heading)' }}>Smart Notes Generator</h1>
-							<p className="mt-1" style={{ color: 'var(--dashboard-muted)' }}>Transform any topic into comprehensive study notes</p>
+						<div className="min-w-0">
+							<p className="mb-2 text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--dashboard-primary)' }}>Teaching tools / notes lab</p>
+							<h1 className="text-3xl font-bold tracking-tight sm:text-4xl" style={{ color: 'var(--dashboard-heading)' }}>Build a study guide that teaches.</h1>
+							<p className="mt-2 max-w-2xl text-sm sm:text-base" style={{ color: 'var(--dashboard-muted)' }}>Set the learning brief on the left. Your structured notes, questions, and references will appear alongside it.</p>
 						</div>
 					</div>
-				</div>
+				</header>
 
-				<div className="grid gap-8 lg:grid-cols-2">
+				<div className="grid min-w-0 gap-6 xl:grid-cols-[minmax(0,0.88fr)_minmax(0,1.12fr)] xl:gap-8">
 					{/* Input Form */}
-					<div className="rounded-2xl border p-6 shadow-lg dashboard-card" style={{ borderColor: 'var(--dashboard-border)' }}>
-						<h2 className="mb-6 text-xl font-bold" style={{ color: 'var(--dashboard-heading)' }}>Configure Your Notes</h2>
+					<div className="rounded-2xl border p-5 shadow-sm dashboard-card sm:p-7" style={{ borderColor: 'var(--dashboard-border)' }}>
+						<div className="mb-7 flex items-start justify-between gap-4 border-b pb-5" style={{ borderColor: 'var(--dashboard-border)' }}>
+							<div>
+								<h2 className="text-xl font-bold" style={{ color: 'var(--dashboard-heading)' }}>Your note brief</h2>
+								<p className="mt-1 text-sm" style={{ color: 'var(--dashboard-muted)' }}>Give the AI the teaching context it needs.</p>
+							</div>
+							<span className="rounded-full px-3 py-1 text-xs font-semibold" style={{ background: 'color-mix(in srgb, var(--dashboard-primary) 12%, transparent)', color: 'var(--dashboard-primary)' }}>Step 1 of 2</span>
+						</div>
 						
 						<form onSubmit={handleSubmit} className="space-y-5">
 							<div>
 								<label className="mb-2 block text-sm font-medium" style={{ color: 'var(--dashboard-text)' }}>
 									Topic <span className="text-red-500">*</span>
 								</label>
+								<p className="mb-3 text-xs" style={{ color: 'var(--dashboard-muted)' }}>Use a precise lesson, concept, or exam topic.</p>
 								<input
 									type="text"
 									name="topic"
 									value={formData.topic}
 									onChange={handleInputChange}
-									className="w-full rounded-lg border px-4 py-2.5 text-sm focus:ring-2 placeholder:opacity-60"
+									className="w-full rounded-lg border px-4 py-3 text-sm transition-shadow focus:ring-2 placeholder:opacity-60"
 									style={{
 										borderColor: 'var(--dashboard-border)',
 										backgroundColor: 'var(--dashboard-surface-solid)',
@@ -388,12 +385,17 @@ Return ONLY valid JSON, no additional text.`;
 								/>
 							</div>
 
+							<div className="rounded-xl border px-4 py-3 text-xs leading-5" style={{ borderColor: 'var(--dashboard-border)', background: 'color-mix(in srgb, var(--dashboard-primary) 5%, var(--dashboard-surface-solid))', color: 'var(--dashboard-muted)' }}>
+								<strong style={{ color: 'var(--dashboard-text)' }}>What you’ll get:</strong> an overview, key concepts, definitions, practice questions, and study references.
+							</div>
+
 							<button
 								type="submit"
 								disabled={generating}
-								className="w-full rounded-lg px-6 py-3 font-semibold text-white shadow-lg transition-all hover:shadow-xl disabled:opacity-50 disabled:cursor-not-allowed"
+								className="w-full rounded-lg px-6 py-3.5 font-semibold text-white shadow-sm transition-all hover:shadow-md focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-50"
 								style={{
-									background: 'linear-gradient(to right, var(--dashboard-primary), var(--dashboard-primary-hover))'
+									background: 'var(--dashboard-primary)',
+									'--tw-ring-color': 'var(--dashboard-primary)'
 								}}
 								onMouseEnter={(e) => !generating && (e.currentTarget.style.transform = 'translateY(-1px)')}
 								onMouseLeave={(e) => (e.currentTarget.style.transform = 'translateY(0)')}
@@ -419,9 +421,12 @@ Return ONLY valid JSON, no additional text.`;
 					</div>
 
 					{/* Results */}
-					<div className="rounded-2xl border p-6 shadow-lg dashboard-card" style={{ borderColor: 'var(--dashboard-border)' }}>
-						<div className="flex items-center justify-between mb-6">
-							<h2 className="text-xl font-bold" style={{ color: 'var(--dashboard-heading)' }}>Your Notes</h2>
+					<div className="min-w-0 rounded-2xl border dashboard-card" style={{ borderColor: 'var(--dashboard-border)' }}>
+						<div className="flex flex-wrap items-center justify-between gap-4 border-b px-5 py-5 sm:px-7" style={{ borderColor: 'var(--dashboard-border)' }}>
+							<div>
+								<p className="text-xs font-semibold uppercase tracking-[0.18em]" style={{ color: 'var(--dashboard-primary)' }}>Study guide</p>
+								<h2 className="mt-1 text-xl font-bold" style={{ color: 'var(--dashboard-heading)' }}>{notesData ? notesData.title || "Your Notes" : "Your Notes"}</h2>
+							</div>
 							{notesData && (
 								<div className="flex gap-2">
 									<button
@@ -476,8 +481,9 @@ Return ONLY valid JSON, no additional text.`;
 							)}
 						</div>
 						
+						<div className="p-5 sm:p-7">
 						{error && (
-							<div className="rounded-lg border p-4" style={{
+							<div className="rounded-xl border p-4" role="alert" style={{
 								background: 'rgba(239, 68, 68, 0.1)',
 								borderColor: 'rgba(239, 68, 68, 0.4)',
 								color: '#ef4444'
@@ -487,29 +493,30 @@ Return ONLY valid JSON, no additional text.`;
 						)}
 
 						{!notesData && !generating && !error && (
-							<div className="flex flex-col items-center justify-center py-12 text-center">
-								<div className="mb-4 flex h-20 w-20 items-center justify-center rounded-full dashboard-pill">
+							<div className="flex min-h-[420px] flex-col items-center justify-center text-center">
+								<div className="mb-5 flex h-16 w-16 items-center justify-center rounded-2xl border" style={{ borderColor: 'var(--dashboard-border)', background: 'color-mix(in srgb, var(--dashboard-primary) 8%, var(--dashboard-surface-solid))' }}>
 									<svg className="h-10 w-10" fill="none" viewBox="0 0 24 24" stroke="currentColor" style={{ color: 'var(--dashboard-primary)' }}>
 										<path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z" />
 									</svg>
 								</div>
-								<h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--dashboard-heading)' }}>No notes generated yet</h3>
-								<p className="text-sm" style={{ color: 'var(--dashboard-muted)' }}>Enter a topic and click "Generate Notes" to get started!</p>
+								<h3 className="mb-2 text-lg font-semibold" style={{ color: 'var(--dashboard-heading)' }}>Your study guide starts here</h3>
+								<p className="max-w-sm text-sm leading-6" style={{ color: 'var(--dashboard-muted)' }}>Complete the brief and generate notes to turn this space into a focused, shareable learning resource.</p>
 							</div>
 						)}
 
 						{generating && (
-							<div className="flex flex-col items-center justify-center py-12">
+							<div className="flex min-h-[420px] flex-col items-center justify-center">
 								<div className="h-12 w-12 animate-spin rounded-full border-4 border-t-transparent mb-4" style={{ borderColor: 'var(--dashboard-primary)', borderTopColor: 'transparent' }}></div>
 								<p style={{ color: 'var(--dashboard-muted)' }}>AI is creating your structured notes...</p>
 							</div>
 						)}
 
 						{notesData && (
-							<div className="max-h-[calc(100vh-250px)] overflow-y-auto pr-2">
+							<div className="max-h-[calc(100vh-230px)] overflow-y-auto pr-2">
 								<NotesRenderer notesData={notesData} />
 							</div>
 						)}
+						</div>
 					</div>
 				</div>
 			</div>

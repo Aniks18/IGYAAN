@@ -3,8 +3,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useAuth } from "../../../utils/auth_context";
-
-const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+import { requestAiChat } from "@/app/utils/ai-chat";
 
 export default function TextSummarizerPage() {
 	const { user, loading } = useAuth();
@@ -74,15 +73,8 @@ ${formData.text}
 
 Provide ONLY the summary, no additional commentary or explanations.`;
 
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${OPENAI_API_KEY}`,
-				},
-				body: JSON.stringify({
-					model: "gpt-4o",
-					messages: [
+			const response = await requestAiChat({
+				messages: [
 						{
 							role: "system",
 							content: "You are an expert text summarizer. You create clear, accurate summaries that capture the essential information while being concise. Follow the user's formatting and length requirements precisely."
@@ -91,10 +83,9 @@ Provide ONLY the summary, no additional commentary or explanations.`;
 							role: "user",
 							content: prompt
 						}
-					],
-					temperature: 0.5,
-					max_tokens: 1000,
-				}),
+				],
+				temperature: 0.5,
+				max_tokens: 1000,
 			});
 
 			if (!response.ok) {

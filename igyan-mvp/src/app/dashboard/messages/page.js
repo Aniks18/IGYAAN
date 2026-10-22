@@ -143,6 +143,13 @@ const INITIAL_CONTACTS = [
 	},
 ];
 
+const MESSAGE_TAGS = [
+	{ id: "general", label: "General", icon: "💬" },
+	{ id: "complaint", label: "COMPLAINT", icon: "🚩" },
+	{ id: "homework", label: "HW", icon: "📚" },
+	{ id: "urgent", label: "URGENT", icon: "⚠️" },
+];
+
 // Directory of Teachers & Staff matching Screenshot 5
 const DIRECTORY_USERS = [
 	{ id: "dir-1", name: "Raj Patel", roleTitle: "Class Teacher of (6-C)", role: "Class Teacher", status: "Active", avatarBg: "bg-blue-500", initials: "RP" },
@@ -161,6 +168,7 @@ export default function CommunicationPage() {
 	const [activeContactId, setActiveContactId] = useState("c-2"); // Default Emily Carter (5-A) matching Figma
 	const [searchContactQuery, setSearchContactQuery] = useState("");
 	const [inputText, setInputText] = useState("");
+	const [selectedTag, setSelectedTag] = useState("general");
 
 	// New Message Drawer / Modal
 	const [showNewMessageDrawer, setShowNewMessageDrawer] = useState(false);
@@ -245,6 +253,7 @@ export default function CommunicationPage() {
 			sender: "me",
 			text: inputText.trim(),
 			time: new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }),
+			flag: selectedTag,
 		};
 
 		setContacts((prev) =>
@@ -548,51 +557,41 @@ export default function CommunicationPage() {
 					{/* Bottom Chat Input Bar & Tag Selector matching Image 3 */}
 					<div className="border-t border-slate-100 bg-white p-3 sm:p-4 space-y-3 shrink-0">
 						{/* Tag Selector Row */}
-						<div className="flex items-center gap-2">
+						<div className="flex items-center gap-2 overflow-x-auto pb-1">
 							<span className="text-xs font-semibold text-slate-400 mr-1">
 								Tag:
 							</span>
-							<button
-								type="button"
-								className="flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200/70 transition"
-							>
-								<span>💬</span>
-								<span>General</span>
-							</button>
-							<button
-								type="button"
-								className="flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200/70 transition"
-							>
-								<span>🚩</span>
-								<span>COMPLAINT</span>
-							</button>
-							<button
-								type="button"
-								className="flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-semibold bg-slate-100 text-slate-600 hover:bg-slate-200/70 transition"
-							>
-								<span>📚</span>
-								<span>HW</span>
-							</button>
-							<button
-								type="button"
-								className="flex items-center gap-1.5 rounded-full px-3.5 py-1 text-xs font-bold border border-[#ea580c] bg-[#fff7ed] text-[#ea580c] ring-1 ring-[#ea580c] shadow-2xs transition"
-							>
-								<span>⚠️</span>
-								<span>URGENT</span>
-							</button>
+							{MESSAGE_TAGS.map((tag) => (
+								<button
+									key={tag.id}
+									type="button"
+									onClick={() => setSelectedTag(tag.id)}
+									aria-pressed={selectedTag === tag.id}
+									className={`flex shrink-0 items-center gap-1.5 rounded-full border px-3.5 py-1 text-xs font-semibold transition ${
+										selectedTag === tag.id
+											? "border-[#ea580c] bg-[#fff7ed] text-[#ea580c] ring-1 ring-[#ea580c]"
+											: "border-transparent bg-slate-100 text-slate-600 hover:bg-slate-200/70"
+									}`}
+								>
+									<span>{tag.icon}</span>
+									<span>{tag.label}</span>
+								</button>
+							))}
 						</div>
 
 						{/* Text input with Send Arrow */}
 						<form
 							onSubmit={handleSendMessage}
-							className="flex items-center gap-2 rounded-2xl border border-slate-200 bg-white px-4 py-2.5 shadow-2xs focus-within:border-[#ea580c] focus-within:ring-2 focus-within:ring-[#ea580c]/15 transition-all"
+							className="flex items-center gap-2 rounded-xl border border-slate-300 bg-white px-3 py-2 focus-within:border-[#ea580c] focus-within:ring-2 focus-within:ring-[#ea580c]/15 transition-all"
 						>
 							<input
+								id="chat-message"
+								name="message"
 								type="text"
 								value={inputText}
 								onChange={(e) => setInputText(e.target.value)}
 								placeholder="Type a message..."
-								className="flex-1 bg-transparent text-xs text-slate-800 placeholder:text-slate-400 focus:outline-none"
+								className="min-w-0 flex-1 bg-transparent text-sm text-slate-800 placeholder:text-slate-400 focus:outline-none"
 							/>
 
 							{/* Orange Send button */}
@@ -600,6 +599,7 @@ export default function CommunicationPage() {
 								type="submit"
 								disabled={!inputText.trim()}
 								className="text-[#ea580c] hover:text-[#c2410c] disabled:opacity-30 transition cursor-pointer"
+								aria-label="Send message"
 							>
 								<Send className="h-4 w-4 fill-current stroke-none" />
 							</button>

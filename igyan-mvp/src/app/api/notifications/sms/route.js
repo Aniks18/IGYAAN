@@ -125,28 +125,29 @@ export async function POST(request) {
 		for (const recipient of recipients) {
 			try {
 				let message = customMessage;
+				const recipientData = { ...data, ...recipient.data };
 
 				// Generate message based on type if not provided
 				if (!message) {
 					switch (type) {
 						case 'absence_alert':
-							message = `Dear ${recipient.name}, your child ${recipient.studentName || 'student'} is marked absent today at ${data?.schoolName || 'school'}. If this is an error, please contact the class teacher immediately. - I-GYAN School OS`;
+							message = `Dear ${recipient.name}, your child ${recipient.studentName || 'student'} is marked absent today at ${recipientData.schoolName || 'school'}. If this is an error, please contact the class teacher immediately. - I-GYAN School OS`;
 							break;
 						
 						case 'weekly_report':
-							message = `Weekly Attendance Report for ${recipient.studentName}:\nPresent: ${data?.present || 0} days\nAbsent: ${data?.absent || 0} days\nAttendance: ${data?.percentage || 0}%\n- I-GYAN School OS`;
+							message = `Weekly Attendance Report for ${recipient.studentName}:\nPresent: ${recipientData.present || 0} days\nAbsent: ${recipientData.absent || 0} days\nAttendance: ${recipientData.percentage || 0}%\n- I-GYAN School OS`;
 							break;
 						
 						case 'emergency':
-							message = `URGENT: ${data?.emergencyMessage || 'Emergency alert from school'}. Please contact school immediately. - I-GYAN School OS`;
+							message = `URGENT: ${recipientData.emergencyMessage || 'Emergency alert from school'}. Please contact school immediately. - I-GYAN School OS`;
 							break;
 						
 						case 'general':
-							message = customMessage || `Notification from ${data?.schoolName || 'school'}. - I-GYAN School OS`;
+							message = customMessage || `Notification from ${recipientData.schoolName || 'school'}. - I-GYAN School OS`;
 							break;
 						
 						default:
-							message = `Notification from ${data?.schoolName || 'school'}. - I-GYAN School OS`;
+							message = `Notification from ${recipientData.schoolName || 'school'}. - I-GYAN School OS`;
 					}
 				}
 
@@ -154,7 +155,7 @@ export async function POST(request) {
 				if (provider === 'twilio') {
 					result = await sendViaTwilio(recipient.phone, message);
 				} else if (provider === 'msg91') {
-					result = await sendViaMSG91(recipient.phone, message, data?.templateId);
+					result = await sendViaMSG91(recipient.phone, message, recipientData.templateId);
 				} else {
 					throw new Error('Invalid SMS provider configured');
 				}
