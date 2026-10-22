@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../../utils/auth_context";
 import { Prism as SyntaxHighlighter } from 'react-syntax-highlighter';
 import { vscDarkPlus } from 'react-syntax-highlighter/dist/esm/styles/prism';
-
-const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+import { requestAiChat } from "@/app/utils/ai-chat";
 
 const PROGRAMMING_LANGUAGES = [
 	{ value: "javascript", label: "JavaScript", extension: "js" },
@@ -92,25 +91,17 @@ IMPORTANT:
 - Keep explanations beginner-friendly but technically accurate
 - When explaining code, break it down step-by-step`;
 
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${OPENAI_API_KEY}`,
-				},
-				body: JSON.stringify({
-					model: "gpt-4o",
-					messages: [
+			const response = await requestAiChat({
+				messages: [
 						{ role: "system", content: systemPrompt },
 						...messages.slice(-10).map(msg => ({
 							role: msg.role,
 							content: msg.content
 						})),
 						{ role: "user", content: inputMessage }
-					],
-					temperature: 0.7,
-					max_tokens: 2000,
-				}),
+				],
+				temperature: 0.7,
+				max_tokens: 2000,
 			});
 
 			if (!response.ok) {

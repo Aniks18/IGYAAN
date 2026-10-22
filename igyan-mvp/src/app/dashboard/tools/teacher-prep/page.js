@@ -5,8 +5,7 @@ import { useRouter } from "next/navigation";
 import { useAuth } from "../../../utils/auth_context";
 import QuizQuestion from "./components/QuizQuestion";
 import QuizResults from "./components/QuizResults";
-
-const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+import { requestAiChat } from "@/app/utils/ai-chat";
 
 export default function TeacherPrepPage() {
 	const { user, loading } = useAuth();
@@ -91,15 +90,8 @@ Return the response in this EXACT JSON format:
 
 Provide ONLY valid JSON, no additional commentary.`;
 
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					Authorization: `Bearer ${OPENAI_API_KEY}`,
-				},
-				body: JSON.stringify({
-					model: "gpt-4o",
-					messages: [
+			const response = await requestAiChat({
+				messages: [
 						{
 							role: "system",
 							content: "You are an expert teacher educator and instructional coach. You create preparation materials that help teachers master content knowledge, develop effective teaching strategies, and handle classroom scenarios. Always return valid JSON responses with practical teaching insights."
@@ -108,11 +100,10 @@ Provide ONLY valid JSON, no additional commentary.`;
 							role: "user",
 							content: prompt
 						}
-					],
-					temperature: 0.7,
-					max_tokens: 3000,
-					response_format: { type: "json_object" }
-				}),
+				],
+				temperature: 0.7,
+				max_tokens: 3000,
+				json: true,
 			});
 
 			if (!response.ok) {

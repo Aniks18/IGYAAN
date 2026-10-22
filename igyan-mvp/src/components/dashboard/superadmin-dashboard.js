@@ -23,16 +23,6 @@ const MONTH_NAMES = [
 	"Jul", "Aug", "Sep", "Oct", "Nov", "Dec"
 ];
 
-// Helper to generate realistic default baseline curves if no records for certain months
-function generateBaselineCurve(baseRate = 75, variance = 15) {
-	return MONTH_NAMES.map((month, idx) => {
-		const wave = Math.sin((idx / 12) * Math.PI * 2) * variance;
-		const progress = (idx / 11) * 10;
-		const val = Math.min(98, Math.max(15, Math.round(baseRate + wave + progress)));
-		return { month, value: val };
-	});
-}
-
 export default function SuperAdminDashboard({ user, schoolData }) {
 	const firstName = user?.full_name?.split(" ")[0] || "Admin";
 	const schoolId = user?.school_id || schoolData?.id;
@@ -42,10 +32,10 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 
 	// KPI Stats State
 	const [stats, setStats] = useState({
-		totalStudents: 0,
-		totalTeachers: 0,
-		schoolAvg: 0,
-		studentsAtRisk: 0,
+		totalStudents: null,
+		totalTeachers: null,
+		schoolAvg: null,
+		studentsAtRisk: null,
 	});
 
 	// Academic Sessions & Classes
@@ -55,7 +45,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 	// Class Performance state
 	const [selectedClass, setSelectedClass] = useState("All Classes");
 	const [selectedClassId, setSelectedClassId] = useState(null);
-	const [selectedYear, setSelectedYear] = useState("2025-2026");
+	const [selectedYear, setSelectedYear] = useState("");
 	const [selectedSessionId, setSelectedSessionId] = useState(null);
 	const [classDropdownOpen, setClassDropdownOpen] = useState(false);
 	const [yearDropdownOpen, setYearDropdownOpen] = useState(false);
@@ -65,7 +55,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 	// Teachers Performance state
 	const [selectedTeacherClass, setSelectedTeacherClass] = useState("All Classes");
 	const [selectedTeacherClassId, setSelectedTeacherClassId] = useState(null);
-	const [selectedTeacherYear, setSelectedTeacherYear] = useState("2025-2026");
+	const [selectedTeacherYear, setSelectedTeacherYear] = useState("");
 	const [selectedTeacherSessionId, setSelectedTeacherSessionId] = useState(null);
 	const [teacherClassDropdownOpen, setTeacherClassDropdownOpen] = useState(false);
 	const [teacherYearDropdownOpen, setTeacherYearDropdownOpen] = useState(false);
@@ -73,8 +63,8 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 	const teacherYearRef = useRef(null);
 
 	// Chart Monthly Data
-	const [classMonthlyData, setClassMonthlyData] = useState(() => generateBaselineCurve(72, 12));
-	const [teacherMonthlyData, setTeacherMonthlyData] = useState(() => generateBaselineCurve(80, 8));
+	const [classMonthlyData, setClassMonthlyData] = useState([]);
+	const [teacherMonthlyData, setTeacherMonthlyData] = useState([]);
 
 	// Events State
 	const [eventsList, setEventsList] = useState([]);
@@ -150,14 +140,14 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 			setClasses(classList);
 
 			// C. Fetch Total Students count
-			const { count: studentCount } = await supabase
+			const { count: studentCount, error: studentCountError } = await supabase
 				.from("users")
 				.select("id", { count: "exact", head: true })
 				.eq("school_id", schoolId)
 				.eq("role", "student");
 
 			// D. Fetch Total Teachers count
-			const { count: teacherCount } = await supabase
+			const { count: teacherCount, error: teacherCountError } = await supabase
 				.from("users")
 				.select("id", { count: "exact", head: true })
 				.eq("school_id", schoolId)
@@ -170,10 +160,11 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 				.eq("school_id", schoolId)
 				.limit(1000);
 
-			let avgRate = 78; // Default fallback if no attendance has been marked yet
-			let atRiskCount = 0;
+			let avgRate = null;
+			let atRiskCount = null;
 
 			if (attendanceRecords && attendanceRecords.length > 0) {
+				atRiskCount = 0;
 				const presentCount = attendanceRecords.filter((a) => a.status === "present" || a.status === "half_day").length;
 				avgRate = Math.round((presentCount / attendanceRecords.length) * 100);
 
@@ -195,8 +186,8 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 			}
 
 			setStats({
-				totalStudents: studentCount ?? (classList.length ? classList.length * 28 : 0),
-				totalTeachers: teacherCount ?? 0,
+				totalStudents: studentCountError ? null : studentCount ?? 0,
+				totalTeachers: teacherCountError ? null : teacherCount ?? 0,
 				schoolAvg: avgRate,
 				studentsAtRisk: atRiskCount,
 			});
@@ -261,26 +252,16 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 						}
 					});
 
-					const chartPoints = MONTH_NAMES.map((month, idx) => {
+					const chartPoints = MONTH_NAMES.flatMap((month, idx) => {
 						const g = monthlyGroup[idx];
-						if (g && g.total > 0) {
-							return { month, value: Math.round((g.present / g.total) * 100) };
-						}
-						// Dynamic curve generation with seed based on selected class id
-						const seed = (selectedClassId ? selectedClassId.charCodeAt(0) : 70) % 20;
-						const wave = Math.sin((idx / 12) * Math.PI * 2) * (10 + seed);
-						const val = Math.min(95, Math.max(20, Math.round(65 + seed + wave + idx * 1.5)));
-						return { month, value: val };
+						return g?.total > 0 ? [{ month, value: Math.round((g.present / g.total) * 100) }] : [];
 					});
 
 					setClassMonthlyData(chartPoints);
-				} else {
-					// Dynamic variation when filtering classes
-					const seed = (selectedClassId ? selectedClassId.charCodeAt(0) : 68) % 15;
-					setClassMonthlyData(generateBaselineCurve(68 + seed, 12));
-				}
+				} else setClassMonthlyData([]);
 			} catch (err) {
 				console.error("Error fetching class performance:", err);
+				setClassMonthlyData([]);
 			}
 		};
 
@@ -322,24 +303,16 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 						}
 					});
 
-					const chartPoints = MONTH_NAMES.map((month, idx) => {
+					const chartPoints = MONTH_NAMES.flatMap((month, idx) => {
 						const g = monthlyGroup[idx];
-						if (g && g.total > 0) {
-							return { month, value: Math.round((g.present / g.total) * 100) };
-						}
-						const seed = (selectedTeacherClassId ? selectedTeacherClassId.charCodeAt(0) : 80) % 12;
-						const wave = Math.cos((idx / 12) * Math.PI * 2) * (8 + seed);
-						const val = Math.min(99, Math.max(30, Math.round(78 + seed + wave + idx * 1.2)));
-						return { month, value: val };
+						return g?.total > 0 ? [{ month, value: Math.round((g.present / g.total) * 100) }] : [];
 					});
 
 					setTeacherMonthlyData(chartPoints);
-				} else {
-					const seed = (selectedTeacherClassId ? selectedTeacherClassId.charCodeAt(0) : 82) % 10;
-					setTeacherMonthlyData(generateBaselineCurve(80 + seed, 9));
-				}
+				} else setTeacherMonthlyData([]);
 			} catch (err) {
 				console.error("Error fetching teacher performance:", err);
+				setTeacherMonthlyData([]);
 			}
 		};
 
@@ -357,6 +330,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 
 	// Helper to generate SVG Path for smooth spline area and stroke
 	const generateSpline = (data) => {
+		if (data.length === 0) return { pathD: "", areaD: "", points: [] };
 		const width = 800;
 		const height = 260;
 		const paddingLeft = 45;
@@ -368,7 +342,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 		const chartH = height - paddingTop - paddingBottom;
 
 		const pts = data.map((d, i) => {
-			const x = paddingLeft + (i / (data.length - 1)) * chartW;
+			const x = data.length === 1 ? paddingLeft + chartW / 2 : paddingLeft + (i / (data.length - 1)) * chartW;
 			const y = paddingTop + chartH - (d.value / 100) * chartH;
 			return { x, y, month: d.month, value: d.value };
 		});
@@ -462,7 +436,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 									<div className="min-w-0">
 										<p className="text-xs font-medium text-slate-500">Students</p>
 										<p className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
-											{loadingData ? "..." : stats.totalStudents.toLocaleString()}
+											{loadingData ? "..." : (stats.totalStudents ?? 0).toLocaleString()}
 										</p>
 									</div>
 								</div>
@@ -475,7 +449,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 									<div className="min-w-0">
 										<p className="text-xs font-medium text-slate-500">Teachers</p>
 										<p className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
-											{loadingData ? "..." : stats.totalTeachers.toLocaleString()}
+											{loadingData ? "..." : (stats.totalTeachers ?? 0).toLocaleString()}
 										</p>
 									</div>
 								</div>
@@ -488,7 +462,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 									<div className="min-w-0">
 										<p className="text-xs font-medium text-slate-500">School Avg</p>
 										<p className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
-											{loadingData ? "..." : `${stats.schoolAvg}%`}
+											{loadingData ? "..." : `${stats.schoolAvg ?? 0}%`}
 										</p>
 									</div>
 								</div>
@@ -501,7 +475,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 									<div className="min-w-0">
 										<p className="text-xs font-medium text-slate-500">Students at risk</p>
 										<p className="text-xl font-extrabold tracking-tight text-slate-900 sm:text-2xl">
-											{loadingData ? "..." : stats.studentsAtRisk.toLocaleString()}
+											{loadingData ? "..." : (stats.studentsAtRisk ?? 0).toLocaleString()}
 										</p>
 									</div>
 								</div>
@@ -591,7 +565,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 											className="flex min-w-[100px] items-center justify-between gap-2 rounded-xl border border-slate-200/90 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
 											aria-expanded={yearDropdownOpen}
 										>
-											<span className="truncate">{selectedYear}</span>
+											<span className="truncate">{selectedYear || "No session"}</span>
 											<ChevronDown className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-200 ${yearDropdownOpen ? "rotate-180" : ""}`} />
 										</button>
 										{yearDropdownOpen && (
@@ -616,23 +590,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 														</button>
 													))
 												) : (
-													["2024-2025", "2025-2026", "2026-2027"].map((y) => (
-														<button
-															key={y}
-															type="button"
-															onClick={() => {
-																setSelectedYear(y);
-																setYearDropdownOpen(false);
-															}}
-															className={`flex w-full items-center rounded-lg px-3 py-1.5 text-left text-xs font-medium transition-colors ${
-																selectedYear === y
-																	? "bg-orange-50 font-bold text-orange-600"
-																	: "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-															}`}
-														>
-															{y}
-														</button>
-													))
+													<p className="px-3 py-2 text-xs text-slate-400">No academic sessions yet</p>
 												)}
 											</div>
 										)}
@@ -643,6 +601,11 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 
 							{/* Chart Canvas / SVG */}
 							<div className="relative mt-6 h-[270px] w-full">
+								{!classMonthlyData.length && !loadingData && (
+									<div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/90 px-4 text-center text-sm text-slate-500">
+										No attendance data yet. Mark attendance to view the class trend.
+									</div>
+								)}
 								<svg
 									viewBox="0 0 800 260"
 									className="h-full w-full overflow-visible"
@@ -823,7 +786,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 											className="flex min-w-[100px] items-center justify-between gap-2 rounded-xl border border-slate-200/90 bg-white px-3.5 py-1.5 text-xs font-semibold text-slate-700 shadow-sm transition-all hover:bg-slate-50 hover:border-slate-300 focus:outline-none focus:ring-2 focus:ring-orange-500/20"
 											aria-expanded={teacherYearDropdownOpen}
 										>
-											<span className="truncate">{selectedTeacherYear}</span>
+											<span className="truncate">{selectedTeacherYear || "No session"}</span>
 											<ChevronDown className={`h-3.5 w-3.5 shrink-0 text-slate-400 transition-transform duration-200 ${teacherYearDropdownOpen ? "rotate-180" : ""}`} />
 										</button>
 										{teacherYearDropdownOpen && (
@@ -848,23 +811,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 														</button>
 													))
 												) : (
-													["2024-2025", "2025-2026", "2026-2027"].map((y) => (
-														<button
-															key={y}
-															type="button"
-															onClick={() => {
-																setSelectedTeacherYear(y);
-																setTeacherYearDropdownOpen(false);
-															}}
-															className={`flex w-full items-center rounded-lg px-3 py-1.5 text-left text-xs font-medium transition-colors ${
-																selectedTeacherYear === y
-																	? "bg-orange-50 font-bold text-orange-600"
-																	: "text-slate-700 hover:bg-slate-50 hover:text-slate-900"
-															}`}
-														>
-															{y}
-														</button>
-													))
+													<p className="px-3 py-2 text-xs text-slate-400">No academic sessions yet</p>
 												)}
 											</div>
 										)}
@@ -875,6 +822,11 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 
 							{/* Chart Canvas / SVG */}
 							<div className="relative mt-6 h-[270px] w-full">
+								{!teacherMonthlyData.length && !loadingData && (
+									<div className="absolute inset-0 z-10 flex items-center justify-center rounded-xl bg-white/90 px-4 text-center text-sm text-slate-500">
+										No faculty attendance data yet. Mark attendance to view this trend.
+									</div>
+								)}
 								<svg
 									viewBox="0 0 800 260"
 									className="h-full w-full overflow-visible"
@@ -1078,7 +1030,7 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 													month: "short",
 													day: "numeric",
 											  })
-											: "Upcoming";
+											: "Date not set";
 										return (
 											<div
 												key={ev.id}
@@ -1086,18 +1038,18 @@ export default function SuperAdminDashboard({ user, schoolData }) {
 											>
 												<div className="flex items-center justify-between">
 													<span className="inline-block rounded-md bg-orange-50 px-2 py-0.5 text-[11px] font-bold text-orange-600">
-														{ev.location || "Main Auditorium"}
+														{ev.location || "Location not set"}
 													</span>
 													<span className="text-[11px] font-semibold text-slate-400">
 														{evDate}
 													</span>
 												</div>
 												<h4 className="mt-1.5 text-sm font-bold text-slate-900 line-clamp-1">
-													{ev.title || "School Event"}
+													{ev.title || "Untitled event"}
 												</h4>
 												<p className="mt-1 flex items-center gap-1.5 text-xs font-medium text-slate-400">
 													<Clock className="h-3.5 w-3.5 text-slate-400" />
-													{ev.start_time || "09:00 AM"} {ev.end_time ? `- ${ev.end_time}` : ""}
+													{ev.start_time || "Time not set"} {ev.end_time ? `- ${ev.end_time}` : ""}
 												</p>
 											</div>
 										);

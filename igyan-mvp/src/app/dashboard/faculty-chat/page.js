@@ -1,7 +1,6 @@
 "use client";
 
 import { useState, useEffect, useMemo, useRef } from "react";
-import Image from "next/image";
 import { supabase } from "@/app/utils/supabase";
 import { useAuth } from "@/app/utils/auth_context";
 import {
@@ -10,10 +9,7 @@ import {
 	Send,
 	ChevronDown,
 	SquarePen,
-	Check,
 	CheckCheck,
-	X,
-	Circle,
 } from "lucide-react";
 
 // Figma Frame 138 Message Flags
@@ -24,140 +20,14 @@ const MESSAGE_TAGS = [
 	{ id: "urgent", label: "URGENT", icon: "⚠️" },
 ];
 
-// Curated Contacts & Conversations matching Figma Frame 138 design exactly
-const FIGMA_CONTACTS = [
-	{
-		id: "c-1",
-		name: "Mr. Jonathan Reed (2-A)",
-		studentName: "Jonathan Reed",
-		className: "2-A",
-		role: "Parent",
-		phone: "+91 98765 43210",
-		avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-		initials: "JR",
-		status: "online",
-		unreadCount: 2,
-		lastTime: "12m",
-		lastMessage: "Haha that's terrifying 😂",
-		messages: [
-			{ id: "m-101", sender: "them", text: "Good morning teacher! Are we aligned on the syllabus for next week?", time: "10:15 AM", flag: "general" },
-			{ id: "m-102", sender: "me", text: "Yes, verified and updated in the system.", time: "10:18 AM", flag: "general" },
-			{ id: "m-103", sender: "them", text: "Haha that's terrifying 😂", time: "10:20 AM", flag: "general" },
-		],
-	},
-	{
-		id: "c-2",
-		name: "Ms. Emily Carter (5-A)",
-		studentName: "Emily Carter",
-		className: "5-A",
-		role: "Parent",
-		phone: "+91 98111 22334",
-		avatar: "https://images.unsplash.com/photo-1544005313-94ddf0286df2?auto=format&fit=crop&w=200&q=80",
-		initials: "EC",
-		status: "online",
-		unreadCount: 0,
-		lastTime: "24m",
-		lastMessage: "woohoooo 🎉",
-		messages: [
-			{ id: "m-201", sender: "them", text: "omg, this is amazing", time: "11:02 AM", flag: "general" },
-			{ id: "m-202", sender: "them", text: "perfect! ✅", time: "11:03 AM", flag: "homework" },
-			{ id: "m-203", sender: "them", text: "Wow, this is really epic", time: "11:04 AM", flag: "general" },
-			{ id: "m-204", sender: "me", text: "How are you?", time: "11:10 AM", flag: "general" },
-			{ id: "m-205", sender: "them", text: "just ideas for next time", time: "11:12 AM", flag: "general" },
-			{ id: "m-206", sender: "them", text: "I'll be there in 2 mins ⏱️", time: "11:14 AM", flag: "urgent" },
-			{ id: "m-207", sender: "me", text: "woohoooo", time: "11:16 AM", flag: "general" },
-			{ id: "m-208", sender: "me", text: "haha oh man", time: "11:17 AM", flag: "general" },
-			{ id: "m-209", sender: "me", text: "Haha that's terrifying 😂", time: "11:18 AM", flag: "general" },
-			{ id: "m-210", sender: "them", text: "aww", time: "11:20 AM", flag: "general" },
-			{ id: "m-211", sender: "them", text: "omg, this is amazing", time: "11:21 AM", flag: "general" },
-			{ id: "m-212", sender: "them", text: "woohoooo 🎉", time: "11:22 AM", flag: "general" },
-		],
-	},
-	{
-		id: "c-3",
-		name: "Mrs. Olivia Bennett (1-A)",
-		studentName: "Olivia Bennett",
-		className: "1-A",
-		role: "Parent",
-		phone: "+91 98222 33445",
-		avatar: "https://images.unsplash.com/photo-1580489944761-15a19d654956?auto=format&fit=crop&w=200&q=80",
-		initials: "OB",
-		status: "online",
-		unreadCount: 0,
-		lastTime: "1h",
-		lastMessage: "Wow, this is really epic",
-		messages: [
-			{ id: "m-301", sender: "them", text: "Hey! Did you check the new timetable structure?", time: "09:30 AM", flag: "general" },
-			{ id: "m-302", sender: "me", text: "Just saw it, looks well balanced.", time: "09:45 AM", flag: "general" },
-			{ id: "m-303", sender: "them", text: "Wow, this is really epic", time: "10:00 AM", flag: "homework" },
-		],
-	},
-	{
-		id: "c-4",
-		name: "Mr. Daniel Foster (8-A)",
-		studentName: "Daniel Foster",
-		className: "8-A",
-		role: "Parent",
-		phone: "+91 98333 44556",
-		avatar: "https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=200&q=80",
-		initials: "DF",
-		status: "offline",
-		unreadCount: 0,
-		lastTime: "1h",
-		lastMessage: "omg, this is amazing",
-		messages: [
-			{ id: "m-401", sender: "them", text: "Can we request a copy of the mid-term report card?", time: "08:15 AM", flag: "general" },
-			{ id: "m-402", sender: "me", text: "Certainly! Uploading it to your portal shortly.", time: "08:20 AM", flag: "general" },
-			{ id: "m-403", sender: "them", text: "omg, this is amazing", time: "08:22 AM", flag: "general" },
-		],
-	},
-	{
-		id: "c-5",
-		name: "Mrs. Sophia Clarke (3-A)",
-		studentName: "Sophia Clarke",
-		className: "3-A",
-		role: "Parent",
-		phone: "+91 98444 55667",
-		avatar: "https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=200&q=80",
-		initials: "SC",
-		status: "online",
-		unreadCount: 0,
-		lastTime: "2d",
-		lastMessage: "haha 😂",
-		messages: [
-			{ id: "m-501", sender: "them", text: "Sophia will be absent for the first two periods tomorrow due to a dental visit.", time: "Yesterday", flag: "urgent" },
-			{ id: "m-502", sender: "me", text: "Noted, thank you for informing.", time: "Yesterday", flag: "general" },
-			{ id: "m-503", sender: "them", text: "haha 😂", time: "Yesterday", flag: "general" },
-		],
-	},
-	{
-		id: "c-6",
-		name: "Mr. Benjamin Hayes (6-A)",
-		studentName: "Benjamin Hayes",
-		className: "6-A",
-		role: "Parent",
-		phone: "+91 98555 66778",
-		avatar: "https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=200&q=80",
-		initials: "BH",
-		status: "online",
-		unreadCount: 0,
-		lastTime: "1w",
-		lastMessage: "perfect! ✅",
-		messages: [
-			{ id: "m-601", sender: "them", text: "Received the science exhibition participation invite.", time: "May 10", flag: "general" },
-			{ id: "m-602", sender: "me", text: "Great! Looking forward to Benjamin's project.", time: "May 10", flag: "homework" },
-			{ id: "m-603", sender: "them", text: "perfect! ✅", time: "May 10", flag: "general" },
-		],
-	},
-];
-
 export default function FacultyChatPage() {
 	const { user } = useAuth();
 
 	// ─── STATE ───
-	const [contactsList, setContactsList] = useState(FIGMA_CONTACTS);
-	const [selectedContact, setSelectedContact] = useState(FIGMA_CONTACTS[1]); // Default to Emily Carter (5-A) as in Figma
-	const [messages, setMessages] = useState(FIGMA_CONTACTS[1].messages);
+	const [contactsList, setContactsList] = useState([]);
+	const [selectedContact, setSelectedContact] = useState(null);
+	const [messages, setMessages] = useState([]);
+	const [loading, setLoading] = useState(true);
 	const [searchQuery, setSearchQuery] = useState("");
 	const [activeFilter, setActiveFilter] = useState("all"); // 'all' | 'complaint' | 'homework' | 'urgent'
 	const [selectedTag, setSelectedTag] = useState("urgent"); // Matches Image 3 with 'URGENT' highlighted
@@ -174,15 +44,125 @@ export default function FacultyChatPage() {
 		}
 	}, [messages, selectedContact]);
 
-	// Switch contact
-	const handleSelectContact = (contact) => {
-		setSelectedContact(contact);
-		setMessages(contact.messages || []);
-		// Mark unread as 0 locally
-		setContactsList((prev) =>
-			prev.map((c) => (c.id === contact.id ? { ...c, unreadCount: 0 } : c))
-		);
+	const formatTime = (value) => value
+		? new Date(value).toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true })
+		: "";
+
+	const toMessage = (message) => ({
+		id: message.id,
+		sender: message.sender_id === user?.id ? "me" : "them",
+		text: message.message_text,
+		time: formatTime(message.created_at),
+		flag: message.flag || "general",
+	});
+
+	const loadMessages = async (contact) => {
+		const { data, error } = await supabase
+			.from("parent_teacher_messages")
+			.select("*")
+			.eq("conversation_id", contact.id)
+			.eq("is_deleted", false)
+			.order("created_at", { ascending: true });
+
+		if (error) {
+			console.error("Unable to load messages:", error);
+			return;
+		}
+
+		setMessages((data || []).map(toMessage));
+		await supabase
+			.from("parent_teacher_messages")
+			.update({ is_read: true, read_at: new Date().toISOString() })
+			.eq("conversation_id", contact.id)
+			.neq("sender_id", user.id)
+			.eq("is_read", false);
+		await supabase
+			.from("parent_teacher_conversations")
+			.update({ unread_teacher: 0 })
+			.eq("id", contact.id);
+		setContactsList((previous) => previous.map((item) => item.id === contact.id ? { ...item, unreadCount: 0 } : item));
 	};
+
+	useEffect(() => {
+		if (!user?.id) return;
+
+		const loadConversations = async () => {
+			setLoading(true);
+			const { data: conversations, error } = await supabase
+				.from("parent_teacher_conversations")
+				.select("id, school_id, parent_id, student_id, last_message_at, unread_teacher, parent:parent_id(id, full_name, phone), student:student_id(full_name)")
+				.eq("teacher_id", user.id)
+				.eq("is_active", true)
+				.order("last_message_at", { ascending: false });
+
+			if (error) {
+				console.error("Unable to load parent conversations:", error);
+				setLoading(false);
+				return;
+			}
+
+			const ids = (conversations || []).map((conversation) => conversation.id);
+			const { data: recentMessages } = ids.length
+				? await supabase
+					.from("parent_teacher_messages")
+					.select("conversation_id, message_text, created_at")
+					.in("conversation_id", ids)
+					.eq("is_deleted", false)
+					.order("created_at", { ascending: false })
+				: { data: [] };
+			const latestByConversation = new Map();
+			for (const message of recentMessages || []) {
+				if (!latestByConversation.has(message.conversation_id)) latestByConversation.set(message.conversation_id, message);
+			}
+			const contacts = (conversations || []).map((conversation) => {
+				const lastMessage = latestByConversation.get(conversation.id);
+				const parent = conversation.parent || {};
+				return {
+					id: conversation.id,
+					schoolId: conversation.school_id,
+					name: parent.full_name || "Parent",
+					studentName: conversation.student?.full_name || "",
+					phone: parent.phone || "",
+					initials: (parent.full_name || "P").split(" ").map((part) => part[0]).join("").slice(0, 2).toUpperCase(),
+					unreadCount: conversation.unread_teacher || 0,
+					lastTime: formatTime(lastMessage?.created_at || conversation.last_message_at),
+					lastMessage: lastMessage?.message_text || "No messages yet",
+				};
+			});
+			setContactsList(contacts);
+			setSelectedContact((current) => contacts.find((contact) => contact.id === current?.id) || contacts[0] || null);
+			setLoading(false);
+		};
+
+		loadConversations();
+	}, [user?.id]);
+
+	useEffect(() => {
+		if (selectedContact) loadMessages(selectedContact);
+		else setMessages([]);
+	}, [selectedContact?.id]);
+
+	useEffect(() => {
+		if (!selectedContact?.id) return;
+
+		const channel = supabase
+			.channel(`faculty-parent-messages-${selectedContact.id}`)
+			.on("postgres_changes", {
+				event: "INSERT",
+				schema: "public",
+				table: "parent_teacher_messages",
+				filter: `conversation_id=eq.${selectedContact.id}`,
+			}, (payload) => {
+				setMessages((previous) => previous.some((message) => message.id === payload.new.id)
+					? previous
+					: [...previous, toMessage(payload.new)]);
+			})
+			.subscribe();
+
+		return () => supabase.removeChannel(channel);
+	}, [selectedContact?.id, user?.id]);
+
+	const handleSelectContact = (contact) => setSelectedContact(contact);
 
 	// Send message handler
 	const handleSendMessage = async () => {
@@ -192,45 +172,31 @@ export default function FacultyChatPage() {
 		const textToSend = messageText.trim();
 		const currentTag = selectedTag;
 
-		const newMsg = {
-			id: `m-${Date.now()}`,
-			sender: "me",
-			text: textToSend,
-			time: new Date().toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit", hour12: true }),
-			flag: currentTag,
-		};
-
-		const updatedMessages = [...messages, newMsg];
-		setMessages(updatedMessages);
-		setMessageText("");
-
-		// Update contacts list last message preview
-		setContactsList((prev) =>
-			prev.map((c) =>
-				c.id === selectedContact.id
-					? {
-							...c,
-							lastMessage: textToSend,
-							lastTime: "Just now",
-							messages: updatedMessages,
-					  }
-					: c
-			)
-		);
-
-		// Attempt background supabase sync if tables exist
 		try {
-			if (user?.id && user?.school_id) {
-				await supabase.from("parent_teacher_messages").insert({
-					school_id: user.school_id,
+			const { data, error } = await supabase
+				.from("parent_teacher_messages")
+				.insert({
+					conversation_id: selectedContact.id,
+					school_id: selectedContact.schoolId,
 					sender_id: user.id,
 					sender_role: "faculty",
 					message_text: textToSend,
 					flag: currentTag,
-				});
-			}
-		} catch (e) {
-			// graceful local fallback
+				})
+				.select()
+				.single();
+			if (error) throw error;
+			const now = new Date().toISOString();
+			await supabase
+				.from("parent_teacher_conversations")
+				.update({ last_message_at: now, unread_parent: 1 })
+				.eq("id", selectedContact.id);
+			setMessages((previous) => [...previous, toMessage(data)]);
+			setContactsList((previous) => previous.map((contact) => contact.id === selectedContact.id ? { ...contact, lastMessage: textToSend, lastTime: formatTime(now) } : contact));
+			setMessageText("");
+		} catch (error) {
+			console.error("Unable to send message:", error);
+			alert("Message could not be sent. Please try again.");
 		} finally {
 			setSending(false);
 		}
@@ -258,6 +224,16 @@ export default function FacultyChatPage() {
 		return contactsList.reduce((sum, c) => sum + (c.unreadCount || 0), 0);
 	}, [contactsList]);
 
+	if (!selectedContact) {
+		return (
+			<div className="min-h-full bg-[#f8fafc] p-4 sm:p-6 lg:p-7">
+				<div className="mx-auto flex min-h-72 max-w-[1166px] items-center justify-center rounded-2xl border border-[#eeeeee] bg-white p-6 text-sm text-slate-500">
+					{loading ? "Loading parent conversations…" : "No parent conversations have been started yet."}
+				</div>
+			</div>
+		);
+	}
+
 	return (
 		<div className="min-h-full bg-[#f8fafc] p-4 text-[#1e293b] sm:p-6 lg:p-7">
 			{/* ══════════════════════════════════════════════════════════════
@@ -277,14 +253,15 @@ export default function FacultyChatPage() {
 									<ChevronDown className="h-4 w-4 text-slate-400 stroke-[2.5]" />
 								</h2>
 								<span className="inline-flex items-center justify-center rounded-full bg-[#ea580c] px-2 py-0.5 text-[11px] font-bold text-white shadow-2xs">
-									{totalUnread > 0 ? totalUnread : 12}
+									{totalUnread}
 								</span>
 							</div>
 
 							<button
 								type="button"
-								className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-slate-500 hover:bg-slate-50 hover:text-slate-800 transition"
-								title="New Message"
+								disabled
+								className="flex h-8 w-8 items-center justify-center rounded-xl border border-slate-200 text-slate-400"
+								title="Parents start conversations from their portal"
 							>
 								<SquarePen className="h-4 w-4" />
 							</button>
@@ -320,11 +297,9 @@ export default function FacultyChatPage() {
 									>
 										{/* Round Photo Avatar */}
 										<div className="relative shrink-0">
-											<img
-												src={contact.avatar}
-												alt={contact.name}
-												className="h-10 w-10 rounded-full object-cover shadow-2xs"
-											/>
+											<div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-xs font-bold text-white shadow-2xs">
+												{contact.initials}
+											</div>
 										</div>
 
 										{/* Name & Snippet */}
@@ -364,11 +339,9 @@ export default function FacultyChatPage() {
 						{/* ── Chat Header ── */}
 						<div className="flex items-center justify-between pb-4 border-b border-[#eeeeee]">
 							<div className="flex items-center gap-3">
-								<img
-									src={selectedContact.avatar}
-									alt={selectedContact.name}
-									className="h-10 w-10 rounded-full object-cover shadow-2xs"
-								/>
+								<div className="flex h-10 w-10 items-center justify-center rounded-full bg-slate-800 text-xs font-bold text-white shadow-2xs">
+									{selectedContact.initials}
+								</div>
 								<div>
 									<h3 className="text-sm font-extrabold text-slate-900">
 										{selectedContact.name}
@@ -456,11 +429,9 @@ export default function FacultyChatPage() {
 										className={`flex items-end gap-2 ${isMe ? "justify-end" : "justify-start"}`}
 									>
 										{!isMe && (
-											<img
-												src={selectedContact.avatar}
-												alt="avatar"
-												className="h-6 w-6 rounded-full object-cover shrink-0 shadow-2xs"
-											/>
+											<div className="flex h-6 w-6 shrink-0 items-center justify-center rounded-full bg-slate-700 text-[9px] font-bold text-white shadow-2xs">
+												{selectedContact.initials}
+											</div>
 										)}
 
 										<div

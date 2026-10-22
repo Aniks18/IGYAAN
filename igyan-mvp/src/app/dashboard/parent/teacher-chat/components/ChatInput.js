@@ -48,7 +48,7 @@ export default function ChatInput({ onSend, sending, defaultFlag = "general" }) 
           value={message}
           onChange={(e) => setMessage(e.target.value)}
           onKeyDown={(e) => {
-            if (e.key === "Enter" && !e.shiftKey) {
+            if (e.key === "Enter" && !e.shiftKey && !e.isComposing && e.keyCode !== 229) {
               e.preventDefault();
               handleSend();
             }

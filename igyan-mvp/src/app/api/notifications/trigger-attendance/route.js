@@ -62,23 +62,17 @@ async function sendAbsenceAlerts(supabase, { schoolId, classId, sectionId, date 
 	const targetDate = date || new Date().toISOString().split('T')[0];
 
 	// Fetch today's absent students
-	const { data: attendanceRecords, error: attendanceError } = await supabase
-		.from('attendance')
+	let attendanceQuery = supabase
+		.from('student_attendance_v2')
 		.select(`
-			*,
-			students (
-				id,
-				full_name,
-				class,
-				section,
-				parent_phone,
-				parent_email,
-				parent_user_id
-			)
+			student_id,
+			classes(class_name, section)
 		`)
-		.eq('date', targetDate)
+		.eq('attendance_date', targetDate)
 		.eq('status', 'absent')
 		.eq('school_id', schoolId);
+	if (classId) attendanceQuery = attendanceQuery.eq('class_id', classId);
+	const { data: attendanceRecords, error: attendanceError } = await attendanceQuery;
 
 	if (attendanceError) throw attendanceError;
 
@@ -90,13 +84,23 @@ async function sendAbsenceAlerts(supabase, { schoolId, classId, sectionId, date 
 		});
 	}
 
-	// Filter by class/section if provided
-	let absentStudents = attendanceRecords;
-	if (classId) {
-		absentStudents = absentStudents.filter(r => r.students?.class === classId);
+	const absentRecords = sectionId
+		? attendanceRecords.filter((record) => record.classes?.section === sectionId)
+		: attendanceRecords;
+	if (absentRecords.length === 0) {
+		return NextResponse.json({ success: true, message: 'No absent students found', sent: 0 });
 	}
-	if (sectionId) {
-		absentStudents = absentStudents.filter(r => r.students?.section === sectionId);
+	const studentIds = absentRecords.map((record) => record.student_id);
+	const [{ data: students, error: studentsError }, { data: assignments, error: assignmentsError }] = await Promise.all([
+		supabase.from('users').select('id, full_name').in('id', studentIds),
+		supabase.from('parent_student_assignments').select('student_id, parent:parent_id(id, full_name, phone)').eq('school_id', schoolId).in('student_id', studentIds),
+	]);
+	if (studentsError) throw studentsError;
+	if (assignmentsError) throw assignmentsError;
+	const studentById = new Map((students || []).map((student) => [student.id, student]));
+	const parentsByStudent = new Map();
+	for (const assignment of assignments || []) {
+		if (!parentsByStudent.has(assignment.student_id)) parentsByStudent.set(assignment.student_id, assignment.parent);
 	}
 
 	// Get school details
@@ -110,22 +114,20 @@ async function sendAbsenceAlerts(supabase, { schoolId, classId, sectionId, date 
 	const smsRecipients = [];
 	const appNotificationUserIds = [];
 
-	for (const record of absentStudents) {
-		const student = record.students;
+	for (const studentId of studentIds) {
+		const student = studentById.get(studentId);
+		const parent = parentsByStudent.get(studentId);
+		if (!student || !parent) continue;
 		
-		// Add to SMS list if parent phone exists
-		if (student.parent_phone) {
+		if (parent.phone) {
 			smsRecipients.push({
-				phone: student.parent_phone,
-				name: 'Parent',
+				phone: parent.phone,
+				name: parent.full_name || 'Parent',
 				studentName: student.full_name,
 			});
 		}
 
-		// Add to app notification list if parent has user account
-		if (student.parent_user_id) {
-			appNotificationUserIds.push(student.parent_user_id);
-		}
+		appNotificationUserIds.push(parent.id);
 	}
 
 	const results = {
@@ -172,9 +174,9 @@ async function sendAbsenceAlerts(supabase, { schoolId, classId, sectionId, date 
 
 	return NextResponse.json({
 		success: true,
-		message: `Sent ${absentStudents.length} absence alerts`,
+		message: `Sent ${absentRecords.length} absence alerts`,
 		details: {
-			totalAbsent: absentStudents.length,
+			totalAbsent: absentRecords.length,
 			smsSent: smsRecipients.length,
 			appNotifications: appNotificationUserIds.length,
 		},
@@ -193,11 +195,12 @@ async function sendWeeklyReports(supabase, { schoolId }) {
 	const endDate = today.toISOString().split('T')[0];
 	const startDate = lastFriday.toISOString().split('T')[0];
 
-	// Fetch all students in school
+	// Students are user records; their parents are linked separately.
 	const { data: students, error: studentsError } = await supabase
-		.from('students')
-		.select('*')
-		.eq('school_id', schoolId);
+		.from('users')
+		.select('id, full_name')
+		.eq('school_id', schoolId)
+		.eq('role', 'student');
 
 	if (studentsError) throw studentsError;
 
@@ -215,36 +218,51 @@ async function sendWeeklyReports(supabase, { schoolId }) {
 		.eq('id', schoolId)
 		.single();
 
+	const studentIds = students.map((student) => student.id);
+	const [{ data: attendanceData, error: attendanceError }, { data: assignments, error: assignmentsError }] = await Promise.all([
+		supabase
+			.from('student_attendance_v2')
+			.select('student_id, status')
+			.in('student_id', studentIds)
+			.gte('attendance_date', startDate)
+			.lte('attendance_date', endDate),
+		supabase
+			.from('parent_student_assignments')
+			.select('student_id, parent:parent_id(id, full_name, phone)')
+			.eq('school_id', schoolId)
+			.in('student_id', studentIds),
+	]);
+	if (attendanceError) throw attendanceError;
+	if (assignmentsError) throw assignmentsError;
+	const attendanceByStudent = new Map();
+	for (const record of attendanceData || []) {
+		const records = attendanceByStudent.get(record.student_id) || [];
+		records.push(record);
+		attendanceByStudent.set(record.student_id, records);
+	}
+	const parentsByStudent = new Map();
+	for (const assignment of assignments || []) {
+		if (!parentsByStudent.has(assignment.student_id)) parentsByStudent.set(assignment.student_id, assignment.parent);
+	}
 	const smsRecipients = [];
-	const appNotificationUserIds = [];
+	const appNotificationUserIds = new Set();
 
-	// Calculate attendance for each student
 	for (const student of students) {
-		const { data: attendanceData } = await supabase
-			.from('attendance')
-			.select('status')
-			.eq('student_id', student.id)
-			.gte('date', startDate)
-			.lte('date', endDate);
-
-		const totalDays = attendanceData?.length || 0;
-		const presentDays = attendanceData?.filter(a => a.status === 'present').length || 0;
-		const absentDays = totalDays - presentDays;
-		const percentage = totalDays > 0 ? Math.round((presentDays / totalDays) * 100) : 0;
-
-		// Add to SMS list
-		if (student.parent_phone) {
+		const parent = parentsByStudent.get(student.id);
+		if (!parent) continue;
+		const records = attendanceByStudent.get(student.id) || [];
+		const present = records.filter((record) => record.status === 'present').length;
+		const absent = records.length - present;
+		const percentage = records.length ? Math.round((present / records.length) * 100) : 0;
+		if (parent.phone) {
 			smsRecipients.push({
-				phone: student.parent_phone,
-				name: 'Parent',
+				phone: parent.phone,
+				name: parent.full_name || 'Parent',
 				studentName: student.full_name,
+				data: { present, absent, percentage },
 			});
 		}
-
-		// Add to app notification list
-		if (student.parent_user_id) {
-			appNotificationUserIds.push(student.parent_user_id);
-		}
+		appNotificationUserIds.add(parent.id);
 	}
 
 	const results = {
@@ -270,13 +288,13 @@ async function sendWeeklyReports(supabase, { schoolId }) {
 	}
 
 	// Send app notifications (all parents)
-	if (appNotificationUserIds.length > 0) {
+	if (appNotificationUserIds.size > 0) {
 		const appResponse = await fetch(`${process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000'}/api/notifications/app`, {
 			method: 'POST',
 			headers: { 'Content-Type': 'application/json' },
 			body: JSON.stringify({
 				type: 'weekly_report',
-				userIds: appNotificationUserIds,
+				userIds: [...appNotificationUserIds],
 				title: 'Weekly Attendance Report',
 				message: `Your child's attendance report for the week is now available.`,
 				priority: 'medium',
@@ -296,7 +314,7 @@ async function sendWeeklyReports(supabase, { schoolId }) {
 		details: {
 			totalStudents: students.length,
 			smsSent: Math.min(smsRecipients.length, 100),
-			appNotifications: appNotificationUserIds.length,
+			appNotifications: appNotificationUserIds.size,
 			period: `${startDate} to ${endDate}`,
 		},
 		results,

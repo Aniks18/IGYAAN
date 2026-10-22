@@ -14,8 +14,7 @@ import StudentProfile from "./components/StudentProfile";
 import NotesSelector from "./components/NotesSelector";
 import ModeSelector, { AI_MODES } from "./components/ModeSelector";
 import { supabase } from "../../utils/supabase";
-
-const OPENAI_API_KEY = process.env.NEXT_PUBLIC_OPENAI_API_KEY;
+import { requestAiChat } from "@/app/utils/ai-chat";
 
 export default function AICopilotPage() {
 	const { user, loading } = useAuth();
@@ -237,19 +236,7 @@ export default function AICopilotPage() {
 	// Call OpenAI API
 	const callOpenAI = async (conversationMessages) => {
 		try {
-			const response = await fetch("https://api.openai.com/v1/chat/completions", {
-				method: "POST",
-				headers: {
-					"Content-Type": "application/json",
-					"Authorization": `Bearer ${OPENAI_API_KEY}`,
-				},
-				body: JSON.stringify({
-					model: "gpt-3.5-turbo",
-					messages: conversationMessages,
-					temperature: 0.7,
-					max_tokens: 1000,
-				}),
-			});
+			const response = await requestAiChat({ messages: conversationMessages, temperature: 0.7, max_tokens: 1000 });
 
 			if (!response.ok) {
 				throw new Error("Failed to get response from OpenAI");
